@@ -110,21 +110,17 @@ function connect(serverUrl) {
                 wsUrl = 'ws://' + wsUrl;
             }
 
-            console.log('Connecting to:', wsUrl);
             state.ws = new WebSocket(wsUrl);
 
             state.ws.onopen = () => {
-                console.log('Connected to server');
                 resolve();
             };
 
-            state.ws.onclose = (event) => {
-                console.log('Disconnected from server', event.code, event.reason);
+            state.ws.onclose = () => {
                 showError('Connection lost. Please refresh the page.');
             };
 
-            state.ws.onerror = (err) => {
-                console.error('WebSocket error:', err);
+            state.ws.onerror = () => {
                 reject(new Error('Failed to connect to server. Check the server URL and ensure the server is running.'));
             };
 
@@ -144,8 +140,6 @@ function send(message) {
 }
 
 function handleServerMessage(msg) {
-    console.log('Received:', msg);
-
     switch (msg.type) {
         case 'joined_room':
             handleJoinedRoom(msg);
@@ -170,9 +164,6 @@ function handleServerMessage(msg) {
 // ============================================
 
 function handleJoinedRoom(msg) {
-    console.log('handleJoinedRoom:', msg);
-    console.log('Current gameState:', state.gameState);
-
     state.playerId = msg.player_id;
     state.roomId = msg.room_id;
     state.roomState = msg.room_state;
@@ -181,14 +172,10 @@ function handleJoinedRoom(msg) {
         showLobby();
     } else {
         // Game already in progress (reconnect scenario or instant start)
-        console.log('Game in progress, showing game screen');
         showScreen('game-screen');
         // If we already have game state (from a GameUpdate that arrived first), render it now
         if (state.gameState) {
-            console.log('Have gameState, calling renderGame');
             renderGame();
-        } else {
-            console.log('No gameState yet, waiting for GameUpdate');
         }
     }
 }
@@ -206,10 +193,6 @@ function handleRoomUpdate(msg) {
 }
 
 function handleGameUpdate(msg) {
-    console.log('=== handleGameUpdate ===');
-    console.log('Current playerId:', state.playerId);
-    console.log('Message:', JSON.stringify(msg).substring(0, 200));
-
     const previousPhase = state.gameState?.phase;
     const newPhase = msg.game_state.phase;
 
@@ -218,11 +201,8 @@ function handleGameUpdate(msg) {
     // If we don't have our player ID yet (JoinedRoom hasn't arrived),
     // just store the state and wait. handleJoinedRoom will call renderGame.
     if (!state.playerId) {
-        console.log('>>> No playerId yet, returning early');
         return;
     }
-
-    console.log('>>> Have playerId, proceeding with render. Phase:', newPhase);
 
     // Only reset per-turn state when phase CHANGES to spell_selection (new turn)
     if (newPhase === 'spell_selection' && previousPhase !== 'spell_selection') {
@@ -336,15 +316,11 @@ function renderLobby() {
 function renderGame() {
     const game = state.gameState;
     if (!game) {
-        console.log('renderGame: no gameState');
         return;
     }
     if (!state.playerId) {
-        console.log('renderGame: no playerId');
         return;
     }
-
-    console.log('renderGame: phase =', game.phase, 'playerId =', state.playerId);
 
     elements.turnNumber.textContent = game.turn_number;
     elements.phaseIndicator.textContent = formatPhase(game.phase);
@@ -362,7 +338,6 @@ function renderGame() {
     // Get current player
     const self = game.players.find(p => p.id === state.playerId);
     if (!self) {
-        console.error('renderGame: could not find self in players. playerId:', state.playerId, 'players:', game.players);
         return;
     }
     const isDead = !self.is_alive;
@@ -443,13 +418,10 @@ function renderPlayerCards() {
 
 function renderSpellSelection() {
     const game = state.gameState;
-    console.log('renderSpellSelection - playerId:', state.playerId);
-    console.log('renderSpellSelection - players:', game.players.map(p => p.id));
     const self = game.players.find(p => p.id === state.playerId);
 
     // Check if we already selected
     if (!self) {
-        console.error('Could not find self in players list!');
         return;
     }
     if (self.has_selected_spell) {
@@ -678,15 +650,25 @@ function stopTimer() {
 
 function renderResolution() {
     elements.resolutionPhase.classList.remove('hidden');
+    elements.timerDisplay.classList.remove('hidden');
 
-    const resolution = state.gameState.resolution;
+    const game = state.gameState;
+    const resolution = game.resolution;
     if (!resolution) return;
+
+    // Show countdown timer for resolution phase
+    if (game.phase_time_remaining_ms !== undefined && game.phase_time_remaining_ms !== null) {
+        const seconds = Math.ceil(game.phase_time_remaining_ms / 1000);
+        elements.timerDisplay.textContent = `Next turn in ${seconds}s`;
+        elements.timerDisplay.classList.remove('warning');
+    }
 
     let html = '';
     for (const attack of resolution.attacks) {
         const isKill = attack.target_killed;
+        const isSelf = attack.attacker_id === state.playerId;
         html += `
-            <div class="attack-result ${isKill ? 'kill' : ''}">
+            <div class="attack-result ${isKill ? 'kill' : ''} ${isSelf ? 'self-attack' : ''}">
                 <div class="attack-header">
                     <span class="attacker">${escapeHtml(attack.attacker_name)} cast ${escapeHtml(attack.spell_name)}!</span>
                     <span class="damage">-${attack.damage_dealt} HP</span>
@@ -695,6 +677,10 @@ function renderResolution() {
                     Target: ${escapeHtml(attack.target_name)}
                     (<span class="accuracy">${attack.accuracy_percent.toFixed(1)}% accuracy</span>)
                     ${isKill ? '<span class="kill-text"> - DEFEATED!</span>' : ''}
+                </div>
+                <div class="attack-incantation">
+                    <span class="expected">"${escapeHtml(attack.incantation)}"</span>
+                    <span class="typed"> → "${escapeHtml(attack.typed_text)}"</span>
                 </div>
             </div>
         `;

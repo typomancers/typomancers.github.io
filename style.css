@@ -553,6 +553,25 @@ body {
     font-weight: 600;
 }
 
+.attack-result.self-attack {
+    border-left-color: var(--accent-primary);
+    background: rgba(233, 69, 96, 0.1);
+}
+
+.attack-incantation {
+    margin-top: 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
+.attack-incantation .expected {
+    color: var(--text-muted);
+}
+
+.attack-incantation .typed {
+    color: var(--accent-magic);
+}
+
 /* Waiting Overlay */
 .waiting-overlay {
     position: absolute;
