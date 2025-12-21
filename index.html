@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typomancers - Wizard Battle Arena</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Landing Screen -->
+        <div id="landing-screen" class="screen active">
+            <h1 class="title">⚔️ Typomancers ⚔️</h1>
+            <p class="subtitle">Wizard Battle Arena</p>
+
+            <form id="join-form" class="join-form">
+                <div class="form-group">
+                    <label for="player-name">Wizard Name</label>
+                    <input type="text" id="player-name" placeholder="Enter your name..." maxlength="20" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="server-url">Server URL (use wss:// for ngrok)</label>
+                    <input type="text" id="server-url" placeholder="ws://localhost:8080 or wss://xxx.ngrok.io" value="ws://localhost:8080">
+                </div>
+
+                <div class="form-group">
+                    <label for="room-id">Room Code</label>
+                    <input type="text" id="room-id" placeholder="Enter room code..." maxlength="20" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="timer-seconds">Turn Timer (seconds)</label>
+                    <input type="number" id="timer-seconds" value="30" min="10" max="120">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Enter Arena</button>
+            </form>
+
+            <div id="connection-error" class="error-message hidden"></div>
+        </div>
+
+        <!-- Lobby Screen -->
+        <div id="lobby-screen" class="screen hidden">
+            <h2>Waiting for Wizards...</h2>
+            <p class="room-info">Room: <span id="lobby-room-id"></span></p>
+
+            <div id="lobby-players" class="player-list">
+                <!-- Players will be inserted here -->
+            </div>
+
+            <p class="waiting-text">Waiting for <span id="players-needed">3</span> players...</p>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen hidden">
+            <div class="game-header">
+                <h2>Turn <span id="turn-number">1</span></h2>
+                <div id="phase-indicator" class="phase-indicator">Spell Selection</div>
+                <div id="timer-display" class="timer hidden">30s</div>
+            </div>
+
+            <div id="players-status" class="players-status">
+                <!-- Player cards will be inserted here -->
+            </div>
+
+            <!-- Spell Selection Phase -->
+            <div id="spell-selection" class="phase-content hidden">
+                <h3>Choose Your Spell</h3>
+                <div id="spell-options" class="spell-options">
+                    <!-- Spell buttons inserted here -->
+                </div>
+            </div>
+
+            <!-- Target Selection Phase -->
+            <div id="target-selection" class="phase-content hidden">
+                <h3>Choose Your Target</h3>
+                <div id="target-options" class="target-options">
+                    <!-- Target buttons inserted here -->
+                </div>
+            </div>
+
+            <!-- Typing Phase -->
+            <div id="typing-phase" class="phase-content hidden">
+                <h3>Cast Your Spell!</h3>
+                <div class="incantation-display">
+                    <p class="incantation-label">Type this incantation:</p>
+                    <p id="incantation-text" class="incantation-text"></p>
+                </div>
+                <div class="typing-area">
+                    <input type="text" id="typing-input" class="typing-input" autocomplete="off" autocapitalize="off" spellcheck="false">
+                    <div id="typing-feedback" class="typing-feedback"></div>
+                </div>
+                <button id="submit-typing-btn" class="btn btn-secondary">Submit Early</button>
+            </div>
+
+            <!-- Resolution Phase -->
+            <div id="resolution-phase" class="phase-content hidden">
+                <h3>Spell Resolution</h3>
+                <div id="resolution-results" class="resolution-results">
+                    <!-- Attack results inserted here -->
+                </div>
+            </div>
+
+            <!-- Waiting Overlay (for dead players or waiting for others) -->
+            <div id="waiting-overlay" class="waiting-overlay hidden">
+                <p id="waiting-message">Waiting for other players...</p>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <h2 id="gameover-title">Game Over</h2>
+            <div id="winner-display" class="winner-display">
+                <p class="winner-label">The Victor:</p>
+                <p id="winner-name" class="winner-name"></p>
+            </div>
+
+            <div id="final-scores" class="final-scores">
+                <!-- Final player states -->
+            </div>
+
+            <button id="play-again-btn" class="btn btn-primary">Play Again</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

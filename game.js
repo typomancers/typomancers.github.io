@@ -1,0 +1,717 @@
+/**
+ * Typomancers Client
+ *
+ * A thin client that handles UI rendering and server communication.
+ * All game logic is server-authoritative.
+ */
+
+// ============================================
+// State
+// ============================================
+
+const state = {
+    ws: null,
+    playerId: null,
+    playerName: null,
+    roomId: null,
+    roomState: null,
+    gameState: null,
+    selectedSpell: null,
+    selectedTarget: null,
+    typingStartTime: null,
+    typingSubmitted: false,
+    timerInterval: null,
+};
+
+// ============================================
+// DOM Elements
+// ============================================
+
+const elements = {
+    // Screens
+    landingScreen: document.getElementById('landing-screen'),
+    lobbyScreen: document.getElementById('lobby-screen'),
+    gameScreen: document.getElementById('game-screen'),
+    gameoverScreen: document.getElementById('gameover-screen'),
+
+    // Landing
+    joinForm: document.getElementById('join-form'),
+    playerNameInput: document.getElementById('player-name'),
+    serverUrlInput: document.getElementById('server-url'),
+    roomIdInput: document.getElementById('room-id'),
+    timerSecondsInput: document.getElementById('timer-seconds'),
+    connectionError: document.getElementById('connection-error'),
+
+    // Lobby
+    lobbyRoomId: document.getElementById('lobby-room-id'),
+    lobbyPlayers: document.getElementById('lobby-players'),
+    playersNeeded: document.getElementById('players-needed'),
+
+    // Game
+    turnNumber: document.getElementById('turn-number'),
+    phaseIndicator: document.getElementById('phase-indicator'),
+    timerDisplay: document.getElementById('timer-display'),
+    playersStatus: document.getElementById('players-status'),
+
+    // Phases
+    spellSelection: document.getElementById('spell-selection'),
+    spellOptions: document.getElementById('spell-options'),
+    targetSelection: document.getElementById('target-selection'),
+    targetOptions: document.getElementById('target-options'),
+    typingPhase: document.getElementById('typing-phase'),
+    incantationText: document.getElementById('incantation-text'),
+    typingInput: document.getElementById('typing-input'),
+    typingFeedback: document.getElementById('typing-feedback'),
+    submitTypingBtn: document.getElementById('submit-typing-btn'),
+    resolutionPhase: document.getElementById('resolution-phase'),
+    resolutionResults: document.getElementById('resolution-results'),
+    waitingOverlay: document.getElementById('waiting-overlay'),
+    waitingMessage: document.getElementById('waiting-message'),
+
+    // Game Over
+    gameoverTitle: document.getElementById('gameover-title'),
+    winnerName: document.getElementById('winner-name'),
+    finalScores: document.getElementById('final-scores'),
+    playAgainBtn: document.getElementById('play-again-btn'),
+};
+
+// ============================================
+// Screen Management
+// ============================================
+
+function showScreen(screenId) {
+    ['landing-screen', 'lobby-screen', 'game-screen', 'gameover-screen'].forEach(id => {
+        const el = document.getElementById(id);
+        if (id === screenId) {
+            el.classList.remove('hidden');
+            el.classList.add('active');
+        } else {
+            el.classList.add('hidden');
+            el.classList.remove('active');
+        }
+    });
+}
+
+// ============================================
+// WebSocket Communication
+// ============================================
+
+function connect(serverUrl) {
+    return new Promise((resolve, reject) => {
+        try {
+            // Normalize URL: ensure it starts with ws:// or wss://
+            let wsUrl = serverUrl.trim();
+            if (wsUrl.startsWith('https://')) {
+                wsUrl = 'wss://' + wsUrl.slice(8);
+            } else if (wsUrl.startsWith('http://')) {
+                wsUrl = 'ws://' + wsUrl.slice(7);
+            } else if (!wsUrl.startsWith('ws://') && !wsUrl.startsWith('wss://')) {
+                // Assume ws:// for bare URLs
+                wsUrl = 'ws://' + wsUrl;
+            }
+
+            console.log('Connecting to:', wsUrl);
+            state.ws = new WebSocket(wsUrl);
+
+            state.ws.onopen = () => {
+                console.log('Connected to server');
+                resolve();
+            };
+
+            state.ws.onclose = (event) => {
+                console.log('Disconnected from server', event.code, event.reason);
+                showError('Connection lost. Please refresh the page.');
+            };
+
+            state.ws.onerror = (err) => {
+                console.error('WebSocket error:', err);
+                reject(new Error('Failed to connect to server. Check the server URL and ensure the server is running.'));
+            };
+
+            state.ws.onmessage = (event) => {
+                handleServerMessage(JSON.parse(event.data));
+            };
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
+function send(message) {
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+        state.ws.send(JSON.stringify(message));
+    }
+}
+
+function handleServerMessage(msg) {
+    console.log('Received:', msg);
+
+    switch (msg.type) {
+        case 'joined_room':
+            handleJoinedRoom(msg);
+            break;
+        case 'error':
+            handleError(msg);
+            break;
+        case 'room_update':
+            handleRoomUpdate(msg);
+            break;
+        case 'game_update':
+            handleGameUpdate(msg);
+            break;
+        case 'pong':
+            // Keep-alive response, ignore
+            break;
+    }
+}
+
+// ============================================
+// Message Handlers
+// ============================================
+
+function handleJoinedRoom(msg) {
+    state.playerId = msg.player_id;
+    state.roomId = msg.room_id;
+    state.roomState = msg.room_state;
+
+    if (msg.room_state.phase === 'waiting_for_players') {
+        showLobby();
+    } else {
+        // Game already in progress (reconnect scenario or instant start)
+        showScreen('game-screen');
+    }
+}
+
+function handleError(msg) {
+    showError(msg.message);
+}
+
+function handleRoomUpdate(msg) {
+    state.roomState = msg.room_state;
+
+    if (state.roomState.phase === 'waiting_for_players') {
+        renderLobby();
+    }
+}
+
+function handleGameUpdate(msg) {
+    state.gameState = msg.game_state;
+
+    // Reset per-turn state when phase changes
+    if (msg.game_state.phase === 'spell_selection') {
+        state.selectedSpell = null;
+        state.selectedTarget = null;
+        state.typingSubmitted = false;
+    }
+
+    if (msg.game_state.phase === 'game_over') {
+        showGameOver();
+    } else {
+        showScreen('game-screen');
+        renderGame();
+    }
+}
+
+// ============================================
+// Landing Screen
+// ============================================
+
+elements.joinForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const playerName = elements.playerNameInput.value.trim();
+    const serverUrl = elements.serverUrlInput.value.trim();
+    const roomId = elements.roomIdInput.value.trim();
+    const timerSeconds = parseInt(elements.timerSecondsInput.value) || 30;
+
+    if (!playerName || !serverUrl || !roomId) {
+        showError('Please fill in all fields');
+        return;
+    }
+
+    state.playerName = playerName;
+
+    try {
+        hideError();
+        await connect(serverUrl);
+
+        // Send join request
+        send({
+            type: 'join_room',
+            room_id: roomId,
+            player_name: playerName,
+            timer_seconds: timerSeconds,
+        });
+    } catch (err) {
+        showError(err.message);
+    }
+});
+
+function showError(message) {
+    elements.connectionError.textContent = message;
+    elements.connectionError.classList.remove('hidden');
+}
+
+function hideError() {
+    elements.connectionError.classList.add('hidden');
+}
+
+// ============================================
+// Lobby Screen
+// ============================================
+
+function showLobby() {
+    showScreen('lobby-screen');
+    renderLobby();
+}
+
+function renderLobby() {
+    const room = state.roomState;
+    elements.lobbyRoomId.textContent = room.room_id;
+
+    // Render player slots
+    let html = '';
+    for (let i = 0; i < room.max_players; i++) {
+        const player = room.players[i];
+        if (player) {
+            const isSelf = player.id === state.playerId;
+            html += `
+                <div class="player-slot ${isSelf ? 'self' : ''}">
+                    <div class="player-icon">🧙</div>
+                    <div class="player-name">${escapeHtml(player.name)}${isSelf ? ' (You)' : ''}</div>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="player-slot empty">
+                    <div class="player-icon">❓</div>
+                    <div class="player-name">Waiting...</div>
+                </div>
+            `;
+        }
+    }
+    elements.lobbyPlayers.innerHTML = html;
+    elements.playersNeeded.textContent = room.max_players - room.players.length;
+}
+
+// ============================================
+// Game Screen
+// ============================================
+
+function renderGame() {
+    const game = state.gameState;
+    if (!game) return;
+
+    elements.turnNumber.textContent = game.turn_number;
+    elements.phaseIndicator.textContent = formatPhase(game.phase);
+
+    renderPlayerCards();
+
+    // Hide all phase content
+    elements.spellSelection.classList.add('hidden');
+    elements.targetSelection.classList.add('hidden');
+    elements.typingPhase.classList.add('hidden');
+    elements.resolutionPhase.classList.add('hidden');
+    elements.waitingOverlay.classList.add('hidden');
+    elements.timerDisplay.classList.add('hidden');
+
+    // Get current player
+    const self = game.players.find(p => p.id === state.playerId);
+    const isDead = self && !self.is_alive;
+
+    if (isDead) {
+        showWaiting('You have been defeated. Spectating...');
+        return;
+    }
+
+    // Show appropriate phase content
+    switch (game.phase) {
+        case 'spell_selection':
+            renderSpellSelection();
+            break;
+        case 'target_selection':
+            renderTargetSelection();
+            break;
+        case 'typing':
+            renderTypingPhase();
+            break;
+        case 'resolution':
+            renderResolution();
+            break;
+    }
+}
+
+function renderPlayerCards() {
+    const game = state.gameState;
+    let html = '';
+
+    for (const player of game.players) {
+        const isSelf = player.id === state.playerId;
+        const hpPercent = Math.max(0, (player.hp / player.max_hp) * 100);
+        let hpClass = '';
+        if (hpPercent <= 25) hpClass = 'low';
+        else if (hpPercent <= 50) hpClass = 'mid';
+
+        let statusText = '';
+        let statusClass = '';
+
+        if (!player.is_alive) {
+            statusText = 'Defeated';
+        } else {
+            switch (game.phase) {
+                case 'spell_selection':
+                    statusText = player.has_selected_spell ? 'Spell Ready' : 'Choosing...';
+                    statusClass = player.has_selected_spell ? 'ready' : '';
+                    break;
+                case 'target_selection':
+                    statusText = player.has_selected_target ? 'Target Locked' : 'Targeting...';
+                    statusClass = player.has_selected_target ? 'ready' : '';
+                    break;
+                case 'typing':
+                    statusText = player.has_finished_typing ? 'Done!' : 'Casting...';
+                    statusClass = player.has_finished_typing ? 'ready' : '';
+                    break;
+            }
+        }
+
+        html += `
+            <div class="player-card ${isSelf ? 'self' : ''} ${!player.is_alive ? 'dead' : ''}">
+                <div class="player-name">${escapeHtml(player.name)}${isSelf ? ' (You)' : ''}</div>
+                <div class="hp-bar">
+                    <div class="hp-fill ${hpClass}" style="width: ${hpPercent}%"></div>
+                </div>
+                <div class="hp-text">${player.hp} / ${player.max_hp} HP</div>
+                <div class="status-indicator ${statusClass}">${statusText}</div>
+            </div>
+        `;
+    }
+
+    elements.playersStatus.innerHTML = html;
+}
+
+// ============================================
+// Spell Selection Phase
+// ============================================
+
+function renderSpellSelection() {
+    const game = state.gameState;
+    const self = game.players.find(p => p.id === state.playerId);
+
+    // Check if we already selected
+    if (self.has_selected_spell) {
+        showWaiting('Waiting for other wizards to choose their spells...');
+        return;
+    }
+
+    elements.spellSelection.classList.remove('hidden');
+
+    let html = '';
+    for (const spell of game.available_spells) {
+        const selected = state.selectedSpell === spell.id;
+        html += `
+            <button class="spell-btn ${selected ? 'selected' : ''}" data-spell-id="${spell.id}">
+                <div class="spell-name">${escapeHtml(spell.name)}</div>
+                <div class="spell-damage">Max Damage: ${spell.max_damage}</div>
+                <div class="spell-desc">${escapeHtml(spell.description)}</div>
+            </button>
+        `;
+    }
+    elements.spellOptions.innerHTML = html;
+
+    // Add click handlers
+    elements.spellOptions.querySelectorAll('.spell-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const spellId = btn.dataset.spellId;
+            state.selectedSpell = spellId;
+
+            // Update UI
+            elements.spellOptions.querySelectorAll('.spell-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+
+            // Send to server
+            send({ type: 'select_spell', spell_id: spellId });
+        });
+    });
+}
+
+// ============================================
+// Target Selection Phase
+// ============================================
+
+function renderTargetSelection() {
+    const game = state.gameState;
+    const self = game.players.find(p => p.id === state.playerId);
+
+    if (self.has_selected_target) {
+        showWaiting('Waiting for other wizards to choose their targets...');
+        return;
+    }
+
+    elements.targetSelection.classList.remove('hidden');
+
+    let html = '';
+    for (const player of game.players) {
+        if (player.id === state.playerId) continue; // Can't target self
+
+        const disabled = !player.is_alive;
+        const selected = state.selectedTarget === player.id;
+
+        html += `
+            <button class="target-btn ${selected ? 'selected' : ''}"
+                    data-target-id="${player.id}"
+                    ${disabled ? 'disabled' : ''}>
+                ${escapeHtml(player.name)}
+                <span class="target-hp">${player.hp} HP</span>
+            </button>
+        `;
+    }
+    elements.targetOptions.innerHTML = html;
+
+    // Add click handlers
+    elements.targetOptions.querySelectorAll('.target-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.disabled) return;
+
+            const targetId = btn.dataset.targetId;
+            state.selectedTarget = targetId;
+
+            // Update UI
+            elements.targetOptions.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+
+            // Send to server
+            send({ type: 'select_target', target_id: targetId });
+        });
+    });
+}
+
+// ============================================
+// Typing Phase
+// ============================================
+
+function renderTypingPhase() {
+    const game = state.gameState;
+    const self = game.players.find(p => p.id === state.playerId);
+
+    if (self.has_finished_typing || state.typingSubmitted) {
+        showWaiting('Waiting for other wizards to finish casting...');
+        return;
+    }
+
+    elements.typingPhase.classList.remove('hidden');
+    elements.timerDisplay.classList.remove('hidden');
+
+    const typing = game.typing_phase;
+    if (!typing) return;
+
+    elements.incantationText.textContent = typing.incantation;
+    elements.typingInput.value = '';
+    elements.typingInput.focus();
+
+    // Start timer
+    if (!state.typingStartTime) {
+        state.typingStartTime = Date.now();
+    }
+
+    // Update timer display
+    startTimer(typing.duration_ms);
+
+    // Setup input handler
+    elements.typingInput.oninput = () => {
+        updateTypingFeedback(typing.incantation, elements.typingInput.value);
+
+        // Check if done typing (typed enough characters)
+        if (elements.typingInput.value.length >= typing.incantation.length) {
+            // Auto-submit after a small delay
+            setTimeout(() => {
+                if (!state.typingSubmitted) {
+                    submitTyping(true);
+                }
+            }, 100);
+        }
+    };
+
+    // Handle submit button
+    elements.submitTypingBtn.onclick = () => submitTyping(true);
+
+    // Handle Enter key
+    elements.typingInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            submitTyping(true);
+        }
+    };
+}
+
+function updateTypingFeedback(expected, typed) {
+    let html = '';
+
+    for (let i = 0; i < expected.length; i++) {
+        if (i < typed.length) {
+            if (typed[i] === expected[i]) {
+                html += `<span class="correct">${escapeHtml(expected[i])}</span>`;
+            } else {
+                html += `<span class="incorrect">${escapeHtml(expected[i])}</span>`;
+            }
+        } else {
+            html += `<span class="pending">${escapeHtml(expected[i])}</span>`;
+        }
+    }
+
+    elements.typingFeedback.innerHTML = html;
+}
+
+function submitTyping(finished) {
+    if (state.typingSubmitted) return;
+    state.typingSubmitted = true;
+
+    const completionTime = finished ? Date.now() - state.typingStartTime : null;
+
+    send({
+        type: 'submit_typing',
+        typed_text: elements.typingInput.value,
+        completion_time_ms: completionTime,
+    });
+
+    stopTimer();
+    showWaiting('Spell cast! Waiting for others...');
+}
+
+function startTimer(durationMs) {
+    stopTimer();
+
+    const endTime = Date.now() + durationMs;
+
+    state.timerInterval = setInterval(() => {
+        const remaining = Math.max(0, endTime - Date.now());
+        const seconds = Math.ceil(remaining / 1000);
+        elements.timerDisplay.textContent = `${seconds}s`;
+
+        if (seconds <= 5) {
+            elements.timerDisplay.classList.add('warning');
+        } else {
+            elements.timerDisplay.classList.remove('warning');
+        }
+
+        if (remaining <= 0) {
+            stopTimer();
+            if (!state.typingSubmitted) {
+                submitTyping(false);
+            }
+        }
+    }, 100);
+}
+
+function stopTimer() {
+    if (state.timerInterval) {
+        clearInterval(state.timerInterval);
+        state.timerInterval = null;
+    }
+    state.typingStartTime = null;
+}
+
+// ============================================
+// Resolution Phase
+// ============================================
+
+function renderResolution() {
+    elements.resolutionPhase.classList.remove('hidden');
+
+    const resolution = state.gameState.resolution;
+    if (!resolution) return;
+
+    let html = '';
+    for (const attack of resolution.attacks) {
+        const isKill = attack.target_killed;
+        html += `
+            <div class="attack-result ${isKill ? 'kill' : ''}">
+                <div class="attack-header">
+                    <span class="attacker">${escapeHtml(attack.attacker_name)} cast ${escapeHtml(attack.spell_name)}!</span>
+                    <span class="damage">-${attack.damage_dealt} HP</span>
+                </div>
+                <div class="attack-detail">
+                    Target: ${escapeHtml(attack.target_name)}
+                    (<span class="accuracy">${attack.accuracy_percent.toFixed(1)}% accuracy</span>)
+                    ${isKill ? '<span class="kill-text"> - DEFEATED!</span>' : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    if (resolution.attacks.length === 0) {
+        html = '<p>No attacks this turn.</p>';
+    }
+
+    elements.resolutionResults.innerHTML = html;
+}
+
+// ============================================
+// Game Over Screen
+// ============================================
+
+function showGameOver() {
+    showScreen('gameover-screen');
+
+    const game = state.gameState;
+    const winner = game.players.find(p => p.id === game.winner);
+
+    if (winner) {
+        elements.winnerName.textContent = winner.name;
+    } else {
+        elements.winnerName.textContent = 'No one (draw?)';
+    }
+
+    // Show final scores
+    let html = '';
+    for (const player of game.players) {
+        const isWinner = player.id === game.winner;
+        html += `
+            <div class="final-player ${isWinner ? 'winner' : ''}">
+                <div class="name">${escapeHtml(player.name)} ${isWinner ? '👑' : ''}</div>
+                <div class="hp">${player.hp} HP remaining</div>
+            </div>
+        `;
+    }
+    elements.finalScores.innerHTML = html;
+}
+
+elements.playAgainBtn.addEventListener('click', () => {
+    send({ type: 'play_again' });
+});
+
+// ============================================
+// Utility
+// ============================================
+
+function showWaiting(message) {
+    elements.waitingOverlay.classList.remove('hidden');
+    elements.waitingMessage.textContent = message;
+}
+
+function formatPhase(phase) {
+    const phases = {
+        'waiting_for_players': 'Waiting for Players',
+        'spell_selection': 'Spell Selection',
+        'target_selection': 'Target Selection',
+        'typing': 'Cast Your Spell!',
+        'resolution': 'Spell Resolution',
+        'game_over': 'Game Over',
+    };
+    return phases[phase] || phase;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============================================
+// Keep-Alive Ping
+// ============================================
+
+setInterval(() => {
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+        send({ type: 'ping' });
+    }
+}, 30000);
