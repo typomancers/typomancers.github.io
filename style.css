@@ -382,6 +382,33 @@ body {
     background: rgba(233, 69, 96, 0.2);
 }
 
+.spell-btn .spell-type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    background: var(--accent-magic);
+}
+
+.spell-btn.type-attack .spell-type-badge {
+    background: var(--accent-primary);
+}
+
+.spell-btn.type-attack-all .spell-type-badge {
+    background: var(--error);
+}
+
+.spell-btn.type-heal .spell-type-badge {
+    background: var(--success);
+}
+
+.spell-btn.type-shield .spell-type-badge {
+    background: #3b82f6;
+}
+
 .spell-btn .spell-name {
     font-weight: 600;
     font-size: 1.1rem;
@@ -389,7 +416,7 @@ body {
     color: var(--text-primary);
 }
 
-.spell-btn .spell-damage {
+.spell-btn .spell-value {
     color: var(--accent-primary);
     font-size: 0.9rem;
 }
@@ -511,7 +538,7 @@ body {
     text-align: left;
 }
 
-.attack-result {
+.spell-effect {
     padding: 1rem;
     margin-bottom: 1rem;
     background: var(--bg-darker);
@@ -519,56 +546,77 @@ body {
     border-left: 4px solid var(--accent-magic);
 }
 
-.attack-result.kill {
-    border-left-color: var(--error);
+.spell-effect.self-effect {
+    border-left-color: var(--accent-primary);
+    background: rgba(233, 69, 96, 0.1);
 }
 
-.attack-header {
+.effect-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 0.5rem;
 }
 
-.attack-header .attacker {
+.effect-header .caster {
     font-weight: 600;
 }
 
-.attack-header .damage {
+.effect-header .accuracy {
+    color: var(--accent-magic);
+    font-size: 0.9rem;
+}
+
+.effect-targets {
+    margin: 0.5rem 0;
+}
+
+.target-effect {
+    padding: 0.25rem 0;
+    font-size: 0.9rem;
+}
+
+.target-effect .target-name {
+    color: var(--text-secondary);
+    margin-right: 0.5rem;
+}
+
+.target-effect.damage .effect-value {
     color: var(--accent-primary);
     font-weight: 600;
 }
 
-.attack-detail {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-
-.attack-detail .accuracy {
-    color: var(--accent-magic);
-}
-
-.attack-detail .kill-text {
+.target-effect.kill .effect-value {
     color: var(--error);
+}
+
+.target-effect.healing .effect-value {
+    color: var(--success);
     font-weight: 600;
 }
 
-.attack-result.self-attack {
-    border-left-color: var(--accent-primary);
-    background: rgba(233, 69, 96, 0.1);
+.target-effect.shield .effect-value {
+    color: #3b82f6;
+    font-weight: 600;
 }
 
-.attack-incantation {
+.target-effect .hp-after {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-left: 0.5rem;
+}
+
+.effect-incantation {
     margin-top: 0.5rem;
     font-family: 'Courier New', monospace;
     font-size: 0.85rem;
 }
 
-.attack-incantation .expected {
+.effect-incantation .expected {
     color: var(--text-muted);
 }
 
-.attack-incantation .typed {
+.effect-incantation .typed {
     color: var(--accent-magic);
 }
 

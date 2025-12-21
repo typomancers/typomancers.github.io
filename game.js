@@ -434,10 +434,34 @@ function renderSpellSelection() {
     let html = '';
     for (const spell of game.available_spells) {
         const selected = state.selectedSpell === spell.id;
+
+        // Determine spell type display
+        let typeLabel = '';
+        let typeClass = '';
+        switch (spell.spell_type) {
+            case 'attack':
+                typeLabel = 'Attack';
+                typeClass = 'type-attack';
+                break;
+            case 'attack_all':
+                typeLabel = 'Area Attack';
+                typeClass = 'type-attack-all';
+                break;
+            case 'heal':
+                typeLabel = 'Heal Self';
+                typeClass = 'type-heal';
+                break;
+            case 'shield':
+                typeLabel = 'Shield Self';
+                typeClass = 'type-shield';
+                break;
+        }
+
         html += `
-            <button class="spell-btn ${selected ? 'selected' : ''}" data-spell-id="${spell.id}">
+            <button class="spell-btn ${selected ? 'selected' : ''} ${typeClass}" data-spell-id="${spell.id}">
+                <div class="spell-type-badge">${typeLabel}</div>
                 <div class="spell-name">${escapeHtml(spell.name)}</div>
-                <div class="spell-damage">Max Damage: ${spell.max_damage}</div>
+                <div class="spell-value">Max Value: ${spell.max_value}</div>
                 <div class="spell-desc">${escapeHtml(spell.description)}</div>
             </button>
         `;
@@ -505,8 +529,8 @@ function renderTargetSelection() {
             elements.targetOptions.querySelectorAll('.target-btn').forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
 
-            // Send to server
-            send({ type: 'select_target', target_id: targetId });
+            // Send to server (as array for protocol compatibility)
+            send({ type: 'select_target', target_ids: [targetId] });
         });
     });
 }
@@ -664,30 +688,59 @@ function renderResolution() {
     }
 
     let html = '';
-    for (const attack of resolution.attacks) {
-        const isKill = attack.target_killed;
-        const isSelf = attack.attacker_id === state.playerId;
+    for (const effect of resolution.effects) {
+        const isSelf = effect.caster_id === state.playerId;
+
         html += `
-            <div class="attack-result ${isKill ? 'kill' : ''} ${isSelf ? 'self-attack' : ''}">
-                <div class="attack-header">
-                    <span class="attacker">${escapeHtml(attack.attacker_name)} cast ${escapeHtml(attack.spell_name)}!</span>
-                    <span class="damage">-${attack.damage_dealt} HP</span>
+            <div class="spell-effect ${isSelf ? 'self-effect' : ''}">
+                <div class="effect-header">
+                    <span class="caster">${escapeHtml(effect.caster_name)} cast ${escapeHtml(effect.spell_name)}!</span>
+                    <span class="accuracy">${effect.accuracy_percent.toFixed(1)}% accuracy</span>
                 </div>
-                <div class="attack-detail">
-                    Target: ${escapeHtml(attack.target_name)}
-                    (<span class="accuracy">${attack.accuracy_percent.toFixed(1)}% accuracy</span>)
-                    ${isKill ? '<span class="kill-text"> - DEFEATED!</span>' : ''}
+                <div class="effect-targets">
+        `;
+
+        // Show effect on each target
+        for (const target of effect.targets) {
+            let effectText = '';
+            let effectClass = '';
+
+            if (target.damage_dealt !== undefined && target.damage_dealt !== null) {
+                effectText = `-${target.damage_dealt} HP`;
+                effectClass = 'damage';
+                if (target.was_killed) {
+                    effectText += ' - DEFEATED!';
+                    effectClass += ' kill';
+                }
+            } else if (target.healing_received !== undefined && target.healing_received !== null) {
+                effectText = `+${target.healing_received} HP`;
+                effectClass = 'healing';
+            } else if (target.shield_effectiveness !== undefined && target.shield_effectiveness !== null) {
+                effectText = `${target.shield_effectiveness.toFixed(1)}% shield`;
+                effectClass = 'shield';
+            }
+
+            html += `
+                    <div class="target-effect ${effectClass}">
+                        <span class="target-name">${escapeHtml(target.target_name)}:</span>
+                        <span class="effect-value">${effectText}</span>
+                        <span class="hp-after">(${target.hp_after} HP)</span>
+                    </div>
+            `;
+        }
+
+        html += `
                 </div>
-                <div class="attack-incantation">
-                    <span class="expected">"${escapeHtml(attack.incantation)}"</span>
-                    <span class="typed"> → "${escapeHtml(attack.typed_text)}"</span>
+                <div class="effect-incantation">
+                    <span class="expected">"${escapeHtml(effect.incantation)}"</span>
+                    <span class="typed"> → "${escapeHtml(effect.typed_text)}"</span>
                 </div>
             </div>
         `;
     }
 
-    if (resolution.attacks.length === 0) {
-        html = '<p>No attacks this turn.</p>';
+    if (resolution.effects.length === 0) {
+        html = '<p>No spells cast this turn.</p>';
     }
 
     elements.resolutionResults.innerHTML = html;
