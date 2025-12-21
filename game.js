@@ -170,6 +170,9 @@ function handleServerMessage(msg) {
 // ============================================
 
 function handleJoinedRoom(msg) {
+    console.log('handleJoinedRoom:', msg);
+    console.log('Current gameState:', state.gameState);
+
     state.playerId = msg.player_id;
     state.roomId = msg.room_id;
     state.roomState = msg.room_state;
@@ -178,7 +181,15 @@ function handleJoinedRoom(msg) {
         showLobby();
     } else {
         // Game already in progress (reconnect scenario or instant start)
+        console.log('Game in progress, showing game screen');
         showScreen('game-screen');
+        // If we already have game state (from a GameUpdate that arrived first), render it now
+        if (state.gameState) {
+            console.log('Have gameState, calling renderGame');
+            renderGame();
+        } else {
+            console.log('No gameState yet, waiting for GameUpdate');
+        }
     }
 }
 
@@ -195,16 +206,40 @@ function handleRoomUpdate(msg) {
 }
 
 function handleGameUpdate(msg) {
+    console.log('=== handleGameUpdate ===');
+    console.log('Current playerId:', state.playerId);
+    console.log('Message:', JSON.stringify(msg).substring(0, 200));
+
+    const previousPhase = state.gameState?.phase;
+    const newPhase = msg.game_state.phase;
+
     state.gameState = msg.game_state;
 
-    // Reset per-turn state when phase changes
-    if (msg.game_state.phase === 'spell_selection') {
+    // If we don't have our player ID yet (JoinedRoom hasn't arrived),
+    // just store the state and wait. handleJoinedRoom will call renderGame.
+    if (!state.playerId) {
+        console.log('>>> No playerId yet, returning early');
+        return;
+    }
+
+    console.log('>>> Have playerId, proceeding with render. Phase:', newPhase);
+
+    // Only reset per-turn state when phase CHANGES to spell_selection (new turn)
+    if (newPhase === 'spell_selection' && previousPhase !== 'spell_selection') {
         state.selectedSpell = null;
         state.selectedTarget = null;
         state.typingSubmitted = false;
+        state.typingStartTime = null;
+        stopTimer();
     }
 
-    if (msg.game_state.phase === 'game_over') {
+    // Reset typing state when leaving typing phase
+    if (previousPhase === 'typing' && newPhase !== 'typing') {
+        state.typingStartTime = null;
+        stopTimer();
+    }
+
+    if (newPhase === 'game_over') {
         showGameOver();
     } else {
         showScreen('game-screen');
@@ -300,7 +335,16 @@ function renderLobby() {
 
 function renderGame() {
     const game = state.gameState;
-    if (!game) return;
+    if (!game) {
+        console.log('renderGame: no gameState');
+        return;
+    }
+    if (!state.playerId) {
+        console.log('renderGame: no playerId');
+        return;
+    }
+
+    console.log('renderGame: phase =', game.phase, 'playerId =', state.playerId);
 
     elements.turnNumber.textContent = game.turn_number;
     elements.phaseIndicator.textContent = formatPhase(game.phase);
@@ -317,7 +361,11 @@ function renderGame() {
 
     // Get current player
     const self = game.players.find(p => p.id === state.playerId);
-    const isDead = self && !self.is_alive;
+    if (!self) {
+        console.error('renderGame: could not find self in players. playerId:', state.playerId, 'players:', game.players);
+        return;
+    }
+    const isDead = !self.is_alive;
 
     if (isDead) {
         showWaiting('You have been defeated. Spectating...');
@@ -395,9 +443,15 @@ function renderPlayerCards() {
 
 function renderSpellSelection() {
     const game = state.gameState;
+    console.log('renderSpellSelection - playerId:', state.playerId);
+    console.log('renderSpellSelection - players:', game.players.map(p => p.id));
     const self = game.players.find(p => p.id === state.playerId);
 
     // Check if we already selected
+    if (!self) {
+        console.error('Could not find self in players list!');
+        return;
+    }
     if (self.has_selected_spell) {
         showWaiting('Waiting for other wizards to choose their spells...');
         return;
@@ -505,16 +559,19 @@ function renderTypingPhase() {
     if (!typing) return;
 
     elements.incantationText.textContent = typing.incantation;
-    elements.typingInput.value = '';
-    elements.typingInput.focus();
 
-    // Start timer
-    if (!state.typingStartTime) {
+    // Only reset input and start timer if this is the first render of typing phase
+    const isFirstRender = !state.typingStartTime;
+    if (isFirstRender) {
+        elements.typingInput.value = '';
         state.typingStartTime = Date.now();
+        startTimer(typing.duration_ms);
     }
 
-    // Update timer display
-    startTimer(typing.duration_ms);
+    elements.typingInput.focus();
+
+    // Update feedback with current value (preserves progress on re-render)
+    updateTypingFeedback(typing.incantation, elements.typingInput.value);
 
     // Setup input handler
     elements.typingInput.oninput = () => {
@@ -578,9 +635,12 @@ function submitTyping(finished) {
 }
 
 function startTimer(durationMs) {
-    stopTimer();
+    // Don't restart if already running
+    if (state.timerInterval) {
+        return;
+    }
 
-    const endTime = Date.now() + durationMs;
+    const endTime = state.typingStartTime + durationMs;
 
     state.timerInterval = setInterval(() => {
         const remaining = Math.max(0, endTime - Date.now());
@@ -607,7 +667,9 @@ function stopTimer() {
         clearInterval(state.timerInterval);
         state.timerInterval = null;
     }
-    state.typingStartTime = null;
+    // Note: Don't clear typingStartTime here - it's used to track completion time
+    // and to detect if we've already started the typing phase.
+    // It gets cleared in handleGameUpdate when the phase changes.
 }
 
 // ============================================
