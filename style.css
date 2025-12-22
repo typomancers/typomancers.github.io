@@ -64,14 +64,13 @@ body {
     background-size: cover;
     background-position: center;
     z-index: -3;
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+    visibility: hidden;
     /* Boost contrast and saturation */
     filter: contrast(1.15) saturate(1.2);
 }
 
 .background-layer.active {
-    opacity: 1;
+    visibility: visible;
 }
 
 .background-layer.bg-0 {
