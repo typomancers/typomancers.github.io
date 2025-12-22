@@ -28,6 +28,12 @@ const imagePreloader = {
         'assets/red_attack.png',
         'assets/white_idle.png',
         'assets/white_attack.png',
+        'assets/blue_idle.png',
+        'assets/blue_attack.png',
+        'assets/purple_idle.png',
+        'assets/purple_attack.png',
+        'assets/yellow_idle.png',
+        'assets/yellow_attack.png',
         // Spell cards
         'assets/spell_cards/card_img_light_attack.png',
         'assets/spell_cards/card_img_heavy_attack.png',
@@ -128,7 +134,8 @@ const elements = {
     // Lobby
     lobbyRoomId: document.getElementById('lobby-room-id'),
     lobbyPlayers: document.getElementById('lobby-players'),
-    playersNeeded: document.getElementById('players-needed'),
+    lobbyStatus: document.getElementById('lobby-status'),
+    startGameBtn: document.getElementById('start-game-btn'),
 
     // Game
     turnNumber: document.getElementById('turn-number'),
@@ -382,31 +389,39 @@ function renderLobby() {
     const room = state.roomState;
     elements.lobbyRoomId.textContent = room.room_id;
 
-    // Render player slots
+    // Render player slots (show current players, not max_players empty slots)
     let html = '';
-    for (let i = 0; i < room.max_players; i++) {
+    for (let i = 0; i < room.players.length; i++) {
         const player = room.players[i];
-        if (player) {
-            const isSelf = player.id === state.playerId;
-            const spriteUrl = getPlayerSprite(i, 'idle');
-            html += `
-                <div class="player-slot ${isSelf ? 'self' : ''}">
-                    <img src="${spriteUrl}" alt="Player ${i + 1}" class="player-sprite">
-                    <div class="player-name">${escapeHtml(player.name)}${isSelf ? ' (You)' : ''}</div>
-                </div>
-            `;
-        } else {
-            html += `
-                <div class="player-slot empty">
-                    <div class="player-icon">❓</div>
-                    <div class="player-name">Waiting...</div>
-                </div>
-            `;
-        }
+        const isSelf = player.id === state.playerId;
+        const spriteUrl = getPlayerSprite(i, 'idle');
+        html += `
+            <div class="player-slot ${isSelf ? 'self' : ''}">
+                <img src="${spriteUrl}" alt="Player ${i + 1}" class="player-sprite">
+                <div class="player-name">${escapeHtml(player.name)}${isSelf ? ' (You)' : ''}</div>
+            </div>
+        `;
     }
     elements.lobbyPlayers.innerHTML = html;
-    elements.playersNeeded.textContent = room.max_players - room.players.length;
+
+    // Update status text and button
+    const playerCount = room.players.length;
+    const minPlayers = room.min_players;
+    const maxPlayers = room.max_players;
+
+    if (playerCount < minPlayers) {
+        elements.lobbyStatus.textContent = `Need at least ${minPlayers} players to start (${playerCount}/${maxPlayers})`;
+        elements.startGameBtn.classList.add('hidden');
+    } else {
+        elements.lobbyStatus.textContent = `${playerCount} player${playerCount > 1 ? 's' : ''} ready (max ${maxPlayers})`;
+        elements.startGameBtn.classList.remove('hidden');
+    }
 }
+
+// Start game button click handler
+elements.startGameBtn.addEventListener('click', () => {
+    send({ type: 'start_game' });
+});
 
 // ============================================
 // Game Screen
@@ -1095,16 +1110,17 @@ function escapeHtml(text) {
 
 /**
  * Get the sprite color for a player based on their index.
- * Player 1 (index 0) = green, Player 2 (index 1) = white, Player 3 (index 2) = red
+ * Player 1 = green, Player 2 = white, Player 3 = red,
+ * Player 4 = blue, Player 5 = purple, Player 6 = yellow
  */
 function getPlayerSpriteColor(playerIndex) {
-    const colors = ['green', 'white', 'red'];
+    const colors = ['green', 'white', 'red', 'blue', 'purple', 'yellow'];
     return colors[playerIndex] || 'green';
 }
 
 /**
  * Get the sprite path for a player.
- * @param {number} playerIndex - 0, 1, or 2
+ * @param {number} playerIndex - Player index (0-5)
  * @param {string} type - 'idle' or 'attack'
  */
 function getPlayerSprite(playerIndex, type = 'idle') {
