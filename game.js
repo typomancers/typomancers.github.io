@@ -471,12 +471,12 @@ function renderSpellSelection() {
                 emoji = '☄️';
                 break;
             case 'heal':
-                typeLabel = 'Heal Self';
+                typeLabel = 'Heal';
                 typeClass = 'type-heal';
                 emoji = '✨';
                 break;
             case 'shield':
-                typeLabel = 'Shield Self';
+                typeLabel = 'Shield';
                 typeClass = 'type-shield';
                 emoji = '🛡️';
                 break;
