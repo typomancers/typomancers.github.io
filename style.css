@@ -485,7 +485,7 @@ body::before {
 .spell-btn .spell-type-badge {
     display: block;
     width: 100%;
-    padding: 0.5rem 0.25rem;
+    padding: 0.4rem 0.2rem;
     font-size: 0.65rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -497,6 +497,7 @@ body::before {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 1.2;
 }
 
 .spell-btn.type-attack .spell-type-badge {
