@@ -477,7 +477,7 @@ function renderSpellSelection() {
                 break;
             case 'shield':
                 typeLabel = 'Shield';
-                typeClass = 'type-shield';
+                typeClass = 'type-heal';
                 emoji = '🔥';
                 break;
         }
