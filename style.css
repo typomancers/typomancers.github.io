@@ -46,7 +46,7 @@
 body {
     font-family: 'Patrick Hand', 'Indie Flower', 'Comic Sans MS', cursive, sans-serif;
     background: var(--parchment-light);
-    background-image: url('assets/background_N.png');
+    background-image: url('assets/background_0.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
