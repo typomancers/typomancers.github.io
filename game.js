@@ -787,32 +787,68 @@ function renderResolution() {
 
     // Timer is handled by startResolutionTimer() which runs in the background
 
-    let html = '';
-    for (const effect of resolution.effects) {
+    if (resolution.effects.length === 0) {
+        elements.resolutionResults.innerHTML = '<p>No spells cast this turn.</p>';
+        return;
+    }
+
+    // Calculate timing for sequential animations
+    // Total time is 10 seconds (DEFAULT_RESOLUTION_SECONDS)
+    const totalDuration = 10000; // 10 seconds in ms
+    const numEffects = resolution.effects.length;
+    const effectDuration = totalDuration / numEffects;
+
+    // Each effect has 3 stages: caster (33%), spell (33%), targets (34%)
+    const casterDelay = effectDuration * 0.33;
+    const spellDelay = effectDuration * 0.66;
+
+    // Clear the container
+    elements.resolutionResults.innerHTML = '';
+
+    // Create all effect cards and animate them sequentially
+    resolution.effects.forEach((effect, index) => {
         const isSelf = effect.caster_id === state.playerId;
         const casterIndex = getPlayerIndex(effect.caster_id);
         const casterSprite = getPlayerSprite(casterIndex, 'attack');
+        const spellImage = getSpellImage(effect.spell_name, effect.spell_type);
+
+        // Calculate delays for this effect
+        const baseDelay = index * effectDuration;
 
         // Build stun indicator if caster was stunned
         const stunIndicator = effect.stun_count && effect.stun_count > 0
             ? `<span class="stun-indicator">⚡ Stunned ${effect.stun_count}x (-${effect.stun_count * 33}% effectiveness)</span>`
             : '';
 
-        html += `
-            <div class="spell-effect ${isSelf ? 'self-effect' : ''}">
-                <div class="effect-header">
-                    <img src="${casterSprite}" alt="${escapeHtml(effect.caster_name)}" class="effect-caster-sprite">
-                    <div class="effect-header-text">
-                        <span class="caster">${escapeHtml(effect.caster_name)} cast ${escapeHtml(effect.spell_name)}!</span>
-                        <span class="accuracy">${effect.accuracy_percent.toFixed(1)}% accuracy</span>
-                        ${stunIndicator}
+        // Create effect card container
+        const effectCard = document.createElement('div');
+        effectCard.className = `resolution-card ${isSelf ? 'self-effect' : ''}`;
+
+        // Build the card HTML
+        let cardHTML = `
+            <div class="resolution-row">
+                <div class="resolution-caster fade-element" style="animation-delay: ${baseDelay}ms">
+                    <img src="${casterSprite}" alt="${escapeHtml(effect.caster_name)}" class="caster-image">
+                    <div class="caster-name">${escapeHtml(effect.caster_name)}</div>
+                    ${stunIndicator}
+                </div>
+
+                <div class="resolution-spell fade-element" style="animation-delay: ${baseDelay + casterDelay}ms">
+                    <img src="${spellImage}" alt="${escapeHtml(effect.spell_name)}" class="spell-image">
+                    <div class="spell-info">
+                        <div class="spell-name">${escapeHtml(effect.spell_name)}</div>
+                        <div class="spell-accuracy">${effect.accuracy_percent.toFixed(1)}% accuracy</div>
                     </div>
                 </div>
-                <div class="effect-targets">
+
+                <div class="resolution-targets fade-element" style="animation-delay: ${baseDelay + spellDelay}ms">
         `;
 
-        // Show effect on each target
-        for (const target of effect.targets) {
+        // Add all targets
+        effect.targets.forEach(target => {
+            const targetIndex = getPlayerIndex(target.target_id);
+            const targetSprite = getPlayerSprite(targetIndex, 'idle');
+
             let effectText = '';
             let effectClass = '';
 
@@ -820,7 +856,7 @@ function renderResolution() {
                 effectText = `-${target.damage_dealt} HP`;
                 effectClass = 'damage';
                 if (target.was_killed) {
-                    effectText += ' - DEFEATED!';
+                    effectText = 'DEFEATED!';
                     effectClass += ' kill';
                 }
             } else if (target.healing_received !== undefined && target.healing_received !== null) {
@@ -831,30 +867,26 @@ function renderResolution() {
                 effectClass = 'shield';
             }
 
-            html += `
-                    <div class="target-effect ${effectClass}">
-                        <span class="target-name">${escapeHtml(target.target_name)}:</span>
-                        <span class="effect-value">${effectText}</span>
-                        <span class="hp-after">(${target.hp_after} HP)</span>
+            cardHTML += `
+                <div class="target-item">
+                    <img src="${targetSprite}" alt="${escapeHtml(target.target_name)}" class="target-image">
+                    <div class="target-info">
+                        <div class="target-name">${escapeHtml(target.target_name)}</div>
+                        <div class="target-effect ${effectClass}">${effectText}</div>
+                        <div class="target-hp">${target.hp_after} HP</div>
                     </div>
-            `;
-        }
-
-        html += `
                 </div>
-                <div class="effect-incantation">
-                    <span class="expected">"${escapeHtml(effect.incantation)}"</span>
-                    <span class="typed"> → "${escapeHtml(effect.typed_text)}"</span>
+            `;
+        });
+
+        cardHTML += `
                 </div>
             </div>
         `;
-    }
 
-    if (resolution.effects.length === 0) {
-        html = '<p>No spells cast this turn.</p>';
-    }
-
-    elements.resolutionResults.innerHTML = html;
+        effectCard.innerHTML = cardHTML;
+        elements.resolutionResults.appendChild(effectCard);
+    });
 }
 
 // ============================================
@@ -1005,6 +1037,33 @@ function getPlayerIndex(playerId) {
     }
 
     return 0;
+}
+
+/**
+ * Get spell card image path based on spell type.
+ */
+function getSpellCardImage(spellType) {
+    const mapping = {
+        'attack': 'assets/spell_cards/card_img_light_attack.png',
+        'attack_all': 'assets/spell_cards/card_img_group_attack.png',
+        'heal': 'assets/spell_cards/card_img_healing.png',
+        'shield': 'assets/spell_cards/card_img_shield.png'
+    };
+    return mapping[spellType] || 'assets/spell_cards/card_img_light_attack.png';
+}
+
+/**
+ * Map spell names to determine if they should use heavy attack image.
+ */
+function getSpellImage(spellName, spellType) {
+    if (spellType === 'attack' && (spellName === 'Lightning Bolt' || spellName === 'Fireball')) {
+        // Use light attack for fireball, heavy for lightning
+        if (spellName === 'Lightning Bolt') {
+            return 'assets/spell_cards/card_img_heavy_attack.png';
+        }
+        return 'assets/spell_cards/card_img_light_attack.png';
+    }
+    return getSpellCardImage(spellType);
 }
 
 // ============================================
