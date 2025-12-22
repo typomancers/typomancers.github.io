@@ -176,6 +176,10 @@ function handleJoinedRoom(msg) {
         // If we already have game state (from a GameUpdate that arrived first), render it now
         if (state.gameState) {
             renderGame();
+            // Start resolution timer if we're joining during resolution phase
+            if (state.gameState.phase === 'resolution') {
+                startResolutionTimer();
+            }
         }
     }
 }
