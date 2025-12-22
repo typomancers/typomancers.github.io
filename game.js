@@ -1056,9 +1056,9 @@ function getSpellCardImage(spellType) {
  * Map spell names to determine if they should use heavy attack image.
  */
 function getSpellImage(spellName, spellType) {
-    if (spellType === 'attack' && (spellName === 'Lightning Bolt' || spellName === 'Fireball')) {
-        // Use light attack for fireball, heavy for lightning
-        if (spellName === 'Lightning Bolt') {
+    if (spellType === 'attack') {
+        // Use heavy attack for Heartwood Wrath, light attack for Foxfire Shard
+        if (spellName === 'Heartwood Wrath') {
             return 'assets/spell_cards/card_img_heavy_attack.png';
         }
         return 'assets/spell_cards/card_img_light_attack.png';
