@@ -517,7 +517,7 @@ body::before {
 }
 
 .spell-btn.type-shield .spell-type-badge {
-    background: #7b9fc4;
+    background: var(--wizard-green);
 }
 
 /* Card image placeholder (1/3 height) */
