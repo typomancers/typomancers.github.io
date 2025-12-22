@@ -568,6 +568,13 @@ body::before {
     font-weight: 700;
 }
 
+.spell-btn .spell-stats-divider {
+    width: 60%;
+    height: 1px;
+    background: rgba(139, 111, 71, 0.3);
+    margin: 0.25rem 0;
+}
+
 .spell-btn .spell-difficulty {
     font-size: 0.75rem;
     font-weight: 600;
@@ -581,7 +588,7 @@ body::before {
 }
 
 .spell-btn .spell-difficulty.difficulty-medium {
-    color: var(--warning);
+    color:  rgba(234, 178, 8, 0.62);
     background: rgba(234, 179, 8, 0.15);
 }
 

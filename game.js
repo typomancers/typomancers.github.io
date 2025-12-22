@@ -501,6 +501,7 @@ function renderSpellSelection() {
                     <div class="spell-name">${escapeHtml(spell.name)}</div>
                     <div class="spell-stats">
                         <div class="spell-value">⚡ ${spell.max_value}</div>
+                        <div class="spell-stats-divider"></div>
                         <div class="spell-difficulty ${difficultyClass}">${difficultyLabel}</div>
                     </div>
                 </div>
