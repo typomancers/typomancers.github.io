@@ -212,6 +212,13 @@ body {
     margin-bottom: 0.5rem;
 }
 
+.player-slot .player-sprite {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+}
+
 .player-slot .player-name {
     font-weight: 600;
 }
@@ -274,13 +281,15 @@ body {
 }
 
 .player-card {
-    width: 200px;
+    width: 220px;
     padding: 1rem;
     background: var(--bg-card);
     border-radius: 12px;
-    text-align: center;
     position: relative;
     transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .player-card.self {
@@ -298,6 +307,18 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 3rem;
+}
+
+.player-card-sprite {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    margin-bottom: 0.5rem;
+}
+
+.player-card .player-info {
+    width: 100%;
+    text-align: center;
 }
 
 .player-card .player-name {
@@ -553,9 +574,23 @@ body {
 
 .effect-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 1rem;
     margin-bottom: 0.5rem;
+}
+
+.effect-caster-sprite {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.effect-header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex-grow: 1;
 }
 
 .effect-header .caster {

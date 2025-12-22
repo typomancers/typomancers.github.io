@@ -290,9 +290,10 @@ function renderLobby() {
         const player = room.players[i];
         if (player) {
             const isSelf = player.id === state.playerId;
+            const spriteUrl = getPlayerSprite(i, 'idle');
             html += `
                 <div class="player-slot ${isSelf ? 'self' : ''}">
-                    <div class="player-icon">🧙</div>
+                    <img src="${spriteUrl}" alt="Player ${i + 1}" class="player-sprite">
                     <div class="player-name">${escapeHtml(player.name)}${isSelf ? ' (You)' : ''}</div>
                 </div>
             `;
@@ -370,6 +371,8 @@ function renderPlayerCards() {
 
     for (const player of game.players) {
         const isSelf = player.id === state.playerId;
+        const playerIndex = getPlayerIndex(player.id);
+        const spriteUrl = getPlayerSprite(playerIndex, 'idle');
         const hpPercent = Math.max(0, (player.hp / player.max_hp) * 100);
         let hpClass = '';
         if (hpPercent <= 25) hpClass = 'low';
@@ -399,12 +402,15 @@ function renderPlayerCards() {
 
         html += `
             <div class="player-card ${isSelf ? 'self' : ''} ${!player.is_alive ? 'dead' : ''}">
-                <div class="player-name">${escapeHtml(player.name)}${isSelf ? ' (You)' : ''}</div>
-                <div class="hp-bar">
-                    <div class="hp-fill ${hpClass}" style="width: ${hpPercent}%"></div>
+                <img src="${spriteUrl}" alt="${escapeHtml(player.name)}" class="player-card-sprite">
+                <div class="player-info">
+                    <div class="player-name">${escapeHtml(player.name)}${isSelf ? ' (You)' : ''}</div>
+                    <div class="hp-bar">
+                        <div class="hp-fill ${hpClass}" style="width: ${hpPercent}%"></div>
+                    </div>
+                    <div class="hp-text">${player.hp} / ${player.max_hp} HP</div>
+                    <div class="status-indicator ${statusClass}">${statusText}</div>
                 </div>
-                <div class="hp-text">${player.hp} / ${player.max_hp} HP</div>
-                <div class="status-indicator ${statusClass}">${statusText}</div>
             </div>
         `;
     }
@@ -690,12 +696,17 @@ function renderResolution() {
     let html = '';
     for (const effect of resolution.effects) {
         const isSelf = effect.caster_id === state.playerId;
+        const casterIndex = getPlayerIndex(effect.caster_id);
+        const casterSprite = getPlayerSprite(casterIndex, 'attack');
 
         html += `
             <div class="spell-effect ${isSelf ? 'self-effect' : ''}">
                 <div class="effect-header">
-                    <span class="caster">${escapeHtml(effect.caster_name)} cast ${escapeHtml(effect.spell_name)}!</span>
-                    <span class="accuracy">${effect.accuracy_percent.toFixed(1)}% accuracy</span>
+                    <img src="${casterSprite}" alt="${escapeHtml(effect.caster_name)}" class="effect-caster-sprite">
+                    <div class="effect-header-text">
+                        <span class="caster">${escapeHtml(effect.caster_name)} cast ${escapeHtml(effect.spell_name)}!</span>
+                        <span class="accuracy">${effect.accuracy_percent.toFixed(1)}% accuracy</span>
+                    </div>
                 </div>
                 <div class="effect-targets">
         `;
@@ -805,6 +816,47 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+/**
+ * Get the sprite color for a player based on their index.
+ * Player 1 (index 0) = green, Player 2 (index 1) = white, Player 3 (index 2) = red
+ */
+function getPlayerSpriteColor(playerIndex) {
+    const colors = ['green', 'white', 'red'];
+    return colors[playerIndex] || 'green';
+}
+
+/**
+ * Get the sprite path for a player.
+ * @param {number} playerIndex - 0, 1, or 2
+ * @param {string} type - 'idle' or 'attack'
+ */
+function getPlayerSprite(playerIndex, type = 'idle') {
+    const color = getPlayerSpriteColor(playerIndex);
+    return `assets/${color}_${type}.png`;
+}
+
+/**
+ * Get player index by ID from the current game state.
+ * Returns the player's position in the players array (0, 1, or 2).
+ */
+function getPlayerIndex(playerId) {
+    if (!state.gameState && !state.roomState) return 0;
+
+    // Try game state first
+    if (state.gameState) {
+        const index = state.gameState.players.findIndex(p => p.id === playerId);
+        if (index !== -1) return index;
+    }
+
+    // Fall back to room state
+    if (state.roomState) {
+        const index = state.roomState.players.findIndex(p => p.id === playerId);
+        if (index !== -1) return index;
+    }
+
+    return 0;
 }
 
 // ============================================
