@@ -1201,7 +1201,7 @@ setInterval(() => {
         currentIndex = incomingIndex;
     }
 
-    // Cycle every 0.5 second
-    const backgroundCycleTime = 500;
+    // Cycle every 0.3 second
+    const backgroundCycleTime = 300;
     setInterval(cycleBackground, backgroundCycleTime);
 })();
