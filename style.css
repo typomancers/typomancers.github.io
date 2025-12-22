@@ -671,7 +671,7 @@ body::before {
 .typing-feedback {
     margin-top: 0.5rem;
     font-family: 'Courier New', monospace;
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     letter-spacing: 1px;
     min-height: 2rem;
 }
@@ -686,7 +686,7 @@ body::before {
 }
 
 .typing-feedback .pending {
-    color: var(--text-muted);
+    color: var(--ink-dark);
 }
 
 .typing-feedback .completed {
