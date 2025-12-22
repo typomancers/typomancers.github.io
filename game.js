@@ -456,37 +456,37 @@ function renderSpellSelection() {
     for (const spell of game.available_spells) {
         const selected = state.selectedSpell === spell.id;
 
-        // Determine spell type display and emoji
+        // Determine spell type display and image
         let typeLabel = '';
         let typeClass = '';
-        let emoji = '';
         switch (spell.spell_type) {
             case 'attack':
                 typeLabel = 'Attack';
                 typeClass = 'type-attack';
-                emoji = '🔥';
                 break;
             case 'attack_all':
                 typeLabel = 'Area Attack';
                 typeClass = 'type-attack-all';
-                emoji = '☄️';
                 break;
             case 'heal':
                 typeLabel = 'Heal';
                 typeClass = 'type-heal';
-                emoji = '✨';
                 break;
             case 'shield':
                 typeLabel = 'Shield';
                 typeClass = 'type-shield';
-                emoji = '🛡️';
                 break;
         }
+
+        // Get the spell card image
+        const spellImageSrc = getSpellImage(spell.name, spell.spell_type);
 
         html += `
             <button class="spell-btn ${selected ? 'selected' : ''} ${typeClass}" data-spell-id="${spell.id}">
                 <div class="spell-type-badge">${typeLabel}</div>
-                <div class="spell-image">${emoji}</div>
+                <div class="spell-image">
+                    <img src="${spellImageSrc}" alt="${escapeHtml(spell.name)}">
+                </div>
                 <div class="spell-card-body">
                     <div class="spell-name">${escapeHtml(spell.name)}</div>
                     <div class="spell-stats">
@@ -794,6 +794,7 @@ function renderResolution() {
 
     // Calculate timing for sequential animations
     // Total time is 10 seconds (DEFAULT_RESOLUTION_SECONDS)
+    // This is hardcoded and needs to be changed in both server and client side code.
     const totalDuration = 10000; // 10 seconds in ms
     const numEffects = resolution.effects.length;
     const effectDuration = totalDuration / numEffects;
