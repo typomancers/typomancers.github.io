@@ -71,6 +71,7 @@ const elements = {
     // Game Over
     gameoverTitle: document.getElementById('gameover-title'),
     winnerName: document.getElementById('winner-name'),
+    playerStats: document.getElementById('player-stats'),
     finalScores: document.getElementById('final-scores'),
     playAgainBtn: document.getElementById('play-again-btn'),
 };
@@ -870,6 +871,54 @@ function showGameOver() {
         elements.winnerName.textContent = winner.name;
     } else {
         elements.winnerName.textContent = 'No one (draw?)';
+    }
+
+    // Show player statistics
+    if (game.player_stats && game.player_stats.length > 0) {
+        let statsHtml = '<h3>Player Statistics</h3><div class="stats-grid">';
+
+        for (const stats of game.player_stats) {
+            const playerIndex = getPlayerIndex(stats.player_id);
+            const spriteUrl = getPlayerSprite(playerIndex, 'idle');
+            const isSelf = stats.player_id === state.playerId;
+
+            statsHtml += `
+                <div class="player-stat-card ${isSelf ? 'self' : ''}">
+                    <div class="stat-header">
+                        <img src="${spriteUrl}" alt="${escapeHtml(stats.player_name)}" class="stat-sprite">
+                        <div class="stat-player-name">${escapeHtml(stats.player_name)}</div>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Avg WPM:</span>
+                        <span class="stat-value">${stats.avg_wpm.toFixed(1)}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Max WPM:</span>
+                        <span class="stat-value">${stats.max_wpm.toFixed(1)}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Damage Dealt:</span>
+                        <span class="stat-value damage">${stats.total_damage_dealt}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Damage Taken:</span>
+                        <span class="stat-value damage">${stats.total_damage_received}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Healing:</span>
+                        <span class="stat-value heal">${stats.total_healing}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Top Spell:</span>
+                        <span class="stat-value">${escapeHtml(stats.top_spell)} (${stats.top_spell_count}x)</span>
+                    </div>
+                </div>
+            `;
+        }
+        statsHtml += '</div>';
+        elements.playerStats.innerHTML = statsHtml;
+    } else {
+        elements.playerStats.innerHTML = '';
     }
 
     // Show final scores

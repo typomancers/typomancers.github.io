@@ -856,6 +856,86 @@ body::before {
     color: var(--accent-magic);
 }
 
+/* Player Statistics */
+.player-stats {
+    margin-bottom: 2rem;
+}
+
+.player-stats h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.stats-grid {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.player-stat-card {
+    background: rgba(232, 215, 184, 0.95);
+    border: 3px solid var(--wood-brown);
+    border-radius: 8px;
+    padding: 1rem;
+    min-width: 250px;
+    box-shadow: 0 4px 8px rgba(45, 36, 22, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.player-stat-card.self {
+    border-color: var(--accent-primary);
+    box-shadow: 0 4px 12px rgba(214, 124, 74, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.stat-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--wood-brown);
+}
+
+.stat-sprite {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+}
+
+.stat-player-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4rem 0;
+    font-size: 0.9rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.stat-value {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.stat-value.damage {
+    color: var(--error);
+}
+
+.stat-value.heal {
+    color: var(--success);
+}
+
 .final-scores {
     display: flex;
     justify-content: center;
