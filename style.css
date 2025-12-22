@@ -66,6 +66,8 @@ body {
     z-index: -3;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
+    /* Boost contrast and saturation */
+    filter: contrast(1.15) saturate(1.2);
 }
 
 .background-layer.active {
@@ -98,7 +100,7 @@ body::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(244, 232, 208, 0.85);
+    background: rgba(244, 232, 208, 0.65);
     z-index: -1;
     pointer-events: none;
 }
