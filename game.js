@@ -1110,6 +1110,6 @@ setInterval(() => {
     }
 
     // Cycle every 1 second
-    let backgroundCycleTime = 500;
+    let backgroundCycleTime = 250;
     setInterval(cycleBackground, backgroundCycleTime);
 })();

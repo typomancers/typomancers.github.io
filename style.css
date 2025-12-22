@@ -99,7 +99,7 @@ body::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(244, 232, 208, 0.65);
+    background: rgba(244, 232, 208, 0.75);
     z-index: -1;
     pointer-events: none;
 }
@@ -144,6 +144,16 @@ body::before {
     text-shadow: 2px 2px 0px rgba(212, 196, 160, 0.5);
     font-weight: bold;
     letter-spacing: 2px;
+}
+
+.title-image {
+    max-width: 100%;
+    width: 400px;
+    height: auto;
+    margin-bottom: 0.5rem;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .subtitle {
