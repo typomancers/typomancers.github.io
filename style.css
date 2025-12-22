@@ -71,7 +71,7 @@ body::before {
 
 #app {
     width: 100%;
-    max-width: 900px;
+    max-width: 1200px;
     padding: 20px;
 }
 
@@ -441,7 +441,7 @@ body::before {
     display: flex;
     justify-content: center;
     gap: 0.75rem;
-    padding: 0.5rem;
+    padding: 2rem 0.5rem;
     flex-wrap: nowrap;
 }
 
