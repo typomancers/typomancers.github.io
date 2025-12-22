@@ -455,34 +455,44 @@ function renderSpellSelection() {
     for (const spell of game.available_spells) {
         const selected = state.selectedSpell === spell.id;
 
-        // Determine spell type display
+        // Determine spell type display and emoji
         let typeLabel = '';
         let typeClass = '';
+        let emoji = '';
         switch (spell.spell_type) {
             case 'attack':
                 typeLabel = 'Attack';
                 typeClass = 'type-attack';
+                emoji = '🔥';
                 break;
             case 'attack_all':
                 typeLabel = 'Area Attack';
                 typeClass = 'type-attack-all';
+                emoji = '☄️';
                 break;
             case 'heal':
                 typeLabel = 'Heal Self';
                 typeClass = 'type-heal';
+                emoji = '✨';
                 break;
             case 'shield':
                 typeLabel = 'Shield Self';
                 typeClass = 'type-shield';
+                emoji = '🛡️';
                 break;
         }
 
         html += `
             <button class="spell-btn ${selected ? 'selected' : ''} ${typeClass}" data-spell-id="${spell.id}">
                 <div class="spell-type-badge">${typeLabel}</div>
-                <div class="spell-name">${escapeHtml(spell.name)}</div>
-                <div class="spell-value">Max Value: ${spell.max_value}</div>
-                <div class="spell-desc">${escapeHtml(spell.description)}</div>
+                <div class="spell-image">${emoji}</div>
+                <div class="spell-card-body">
+                    <div class="spell-name">${escapeHtml(spell.name)}</div>
+                    <div class="spell-stats">
+                        <div class="spell-value">⚡ ${spell.max_value}</div>
+                    </div>
+                    <div class="spell-desc">${escapeHtml(spell.description)}</div>
+                </div>
             </button>
         `;
     }
