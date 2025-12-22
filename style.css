@@ -485,15 +485,18 @@ body::before {
 .spell-btn .spell-type-badge {
     display: block;
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.5rem 0.25rem;
     font-size: 0.65rem;
     font-weight: 700;
     text-transform: uppercase;
     text-align: center;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     background: var(--accent-magic);
     color: var(--parchment-light);
     border-bottom: 2px solid rgba(45, 36, 22, 0.2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .spell-btn.type-attack .spell-type-badge {
