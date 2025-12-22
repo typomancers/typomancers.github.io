@@ -6,6 +6,89 @@
  */
 
 // ============================================
+// Image Preloader
+// ============================================
+
+const imagePreloader = {
+    images: [],
+    loaded: 0,
+    total: 0,
+
+    // All game images to preload
+    imagePaths: [
+        // Backgrounds
+        'assets/background_0.png',
+        'assets/background_1.png',
+        // Title
+        'assets/TypomancersTitle.png',
+        // Wizard sprites
+        'assets/green_idle.png',
+        'assets/green_attack.png',
+        'assets/red_idle.png',
+        'assets/red_attack.png',
+        'assets/white_idle.png',
+        'assets/white_attack.png',
+        // Spell cards
+        'assets/spell_cards/card_img_light_attack.png',
+        'assets/spell_cards/card_img_heavy_attack.png',
+        'assets/spell_cards/card_img_group_attack.png',
+        'assets/spell_cards/card_img_healing.png',
+        'assets/spell_cards/card_img_shield.png',
+    ],
+
+    preload(onProgress, onComplete) {
+        this.total = this.imagePaths.length;
+        this.loaded = 0;
+
+        if (this.total === 0) {
+            if (onComplete) onComplete();
+            return;
+        }
+
+        this.imagePaths.forEach(path => {
+            const img = new Image();
+            img.onload = () => {
+                this.loaded++;
+                if (onProgress) onProgress(this.loaded, this.total);
+                if (this.loaded === this.total && onComplete) {
+                    onComplete();
+                }
+            };
+            img.onerror = () => {
+                console.warn(`Failed to preload: ${path}`);
+                this.loaded++;
+                if (onProgress) onProgress(this.loaded, this.total);
+                if (this.loaded === this.total && onComplete) {
+                    onComplete();
+                }
+            };
+            img.src = path;
+            this.images.push(img);
+        });
+    }
+};
+
+// Start preloading immediately
+imagePreloader.preload(
+    (loaded, total) => {
+        const percent = Math.round((loaded / total) * 100);
+        const loadingIndicator = document.getElementById('loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.textContent = `Loading assets... ${percent}%`;
+            if (loaded === total) {
+                loadingIndicator.textContent = 'Ready!';
+                setTimeout(() => {
+                    loadingIndicator.style.display = 'none';
+                }, 500);
+            }
+        }
+    },
+    () => {
+        console.log('All images preloaded');
+    }
+);
+
+// ============================================
 // State
 // ============================================
 
@@ -1118,7 +1201,7 @@ setInterval(() => {
         currentIndex = incomingIndex;
     }
 
-    // Cycle every 0.25 second
-    const backgroundCycleTime = 250;
+    // Cycle every 0.5 second
+    const backgroundCycleTime = 500;
     setInterval(cycleBackground, backgroundCycleTime);
 })();

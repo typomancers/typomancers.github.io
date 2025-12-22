@@ -164,9 +164,18 @@ body::before {
 .subtitle {
     text-align: center;
     color: var(--text-secondary);
-    margin-bottom: 2rem;
+    margin-bottom: 0.5rem;
     font-size: 1.2rem;
     font-style: italic;
+}
+
+.loading-indicator {
+    text-align: center;
+    color: var(--accent-magic);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    font-style: italic;
+    transition: opacity 0.3s ease-out;
 }
 
 .join-form {
