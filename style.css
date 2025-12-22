@@ -46,17 +46,51 @@
 body {
     font-family: 'Patrick Hand', 'Indie Flower', 'Comic Sans MS', cursive, sans-serif;
     background: var(--parchment-light);
-    background-image: url('assets/background_0.png');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 
+/* Animated background layers */
+.background-layer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: cover;
+    background-position: center;
+    z-index: -3;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.background-layer.active {
+    opacity: 1;
+}
+
+.background-layer.bg-0 {
+    background-image: url('assets/background_0.png');
+}
+
+.background-layer.bg-0-flipped {
+    background-image: url('assets/background_0.png');
+    transform: scaleX(-1);
+}
+
+.background-layer.bg-1 {
+    background-image: url('assets/background_1.png');
+}
+
+.background-layer.bg-1-flipped {
+    background-image: url('assets/background_1.png');
+    transform: scaleX(-1);
+}
+
+/* Parchment overlay */
 body::before {
     content: '';
     position: fixed;
@@ -588,8 +622,8 @@ body::before {
 }
 
 .spell-btn .spell-difficulty.difficulty-medium {
-    color:  rgba(234, 178, 8, 0.62);
-    background: rgba(234, 179, 8, 0.15);
+    color:  rgba(171, 129, 0, 0.849);
+    background: rgba(234, 178, 8, 0.284);
 }
 
 .spell-btn .spell-difficulty.difficulty-hard {

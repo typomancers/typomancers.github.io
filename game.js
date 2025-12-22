@@ -1087,3 +1087,28 @@ setInterval(() => {
         send({ type: 'ping' });
     }
 }, 30000);
+
+// ============================================
+// Background Animation
+// ============================================
+
+(function initBackgroundAnimation() {
+    const layers = document.querySelectorAll('.background-layer');
+    if (layers.length === 0) return;
+
+    let currentIndex = 0;
+
+    function cycleBackground() {
+        // Remove active from current
+        layers[currentIndex].classList.remove('active');
+
+        // Move to next
+        currentIndex = (currentIndex + 1) % layers.length;
+
+        // Add active to new current
+        layers[currentIndex].classList.add('active');
+    }
+
+    // Cycle every 1 second
+    setInterval(cycleBackground, 1000);
+})();
