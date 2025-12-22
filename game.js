@@ -219,6 +219,16 @@ function handleGameUpdate(msg) {
         stopTimer();
     }
 
+    // Start resolution timer when entering resolution phase
+    if (newPhase === 'resolution' && previousPhase !== 'resolution') {
+        startResolutionTimer();
+    }
+
+    // Stop resolution timer when leaving resolution phase
+    if (previousPhase === 'resolution' && newPhase !== 'resolution') {
+        stopTimer();
+    }
+
     if (newPhase === 'game_over') {
         showGameOver();
     } else {
@@ -674,6 +684,35 @@ function stopTimer() {
     // It gets cleared in handleGameUpdate when the phase changes.
 }
 
+function startResolutionTimer() {
+    // Don't restart if already running
+    if (state.timerInterval) {
+        return;
+    }
+
+    // Get initial time remaining from server
+    const game = state.gameState;
+    if (!game || game.phase_time_remaining_ms === undefined || game.phase_time_remaining_ms === null) {
+        return;
+    }
+
+    const startTime = Date.now();
+    const initialRemaining = game.phase_time_remaining_ms;
+
+    state.timerInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, initialRemaining - elapsed);
+        const seconds = Math.ceil(remaining / 1000);
+
+        elements.timerDisplay.textContent = `Next turn in ${seconds}s`;
+        elements.timerDisplay.classList.remove('warning');
+
+        if (remaining <= 0) {
+            stopTimer();
+        }
+    }, 100);
+}
+
 // ============================================
 // Resolution Phase
 // ============================================
@@ -686,12 +725,7 @@ function renderResolution() {
     const resolution = game.resolution;
     if (!resolution) return;
 
-    // Show countdown timer for resolution phase
-    if (game.phase_time_remaining_ms !== undefined && game.phase_time_remaining_ms !== null) {
-        const seconds = Math.ceil(game.phase_time_remaining_ms / 1000);
-        elements.timerDisplay.textContent = `Next turn in ${seconds}s`;
-        elements.timerDisplay.classList.remove('warning');
-    }
+    // Timer is handled by startResolutionTimer() which runs in the background
 
     let html = '';
     for (const effect of resolution.effects) {
