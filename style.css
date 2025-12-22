@@ -1,22 +1,40 @@
 /* ============================================
    Typomancers - CSS Styles
+   Cute Medieval Wizard Theme
    ============================================ */
 
 :root {
-    --bg-dark: #1a1a2e;
-    --bg-darker: #16213e;
-    --bg-card: #0f3460;
-    --accent-primary: #e94560;
-    --accent-secondary: #7b2cbf;
-    --accent-magic: #9d4edd;
-    --text-primary: #eee;
-    --text-secondary: #aaa;
-    --text-muted: #666;
-    --hp-full: #4ade80;
-    --hp-mid: #fbbf24;
-    --hp-low: #ef4444;
-    --success: #22c55e;
-    --error: #ef4444;
+    /* Warm parchment and medieval tones */
+    --parchment-light: #f4e8d0;
+    --parchment-mid: #e8d7b8;
+    --parchment-dark: #d4c4a0;
+    --wood-brown: #8b6f47;
+    --ink-dark: #2d2416;
+    --ink-medium: #4a3f2e;
+
+    /* Earthy wizard colors */
+    --wizard-green: #6b8e4e;
+    --wizard-red: #c85a54;
+    --wizard-white: #e8dcc8;
+
+    /* Accent colors */
+    --accent-primary: #d67c4a;
+    --accent-secondary: #8b6f47;
+    --accent-magic: #9b7eb8;
+
+    /* Text colors */
+    --text-primary: #2d2416;
+    --text-secondary: #4a3f2e;
+    --text-muted: #7a6f5d;
+
+    /* HP colors */
+    --hp-full: #6b8e4e;
+    --hp-mid: #d4a84a;
+    --hp-low: #c85a54;
+
+    /* Status colors */
+    --success: #6b8e4e;
+    --error: #c85a54;
 }
 
 * {
@@ -26,13 +44,29 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+    font-family: 'Patrick Hand', 'Indie Flower', 'Comic Sans MS', cursive, sans-serif;
+    background: var(--parchment-light);
+    background-image: url('assets/background_N.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(244, 232, 208, 0.85);
+    z-index: -1;
+    pointer-events: none;
 }
 
 #app {
@@ -71,10 +105,10 @@ body {
     font-size: 3rem;
     text-align: center;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-magic));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--wood-brown);
+    text-shadow: 2px 2px 0px rgba(212, 196, 160, 0.5);
+    font-weight: bold;
+    letter-spacing: 2px;
 }
 
 .subtitle {
@@ -82,14 +116,18 @@ body {
     color: var(--text-secondary);
     margin-bottom: 2rem;
     font-size: 1.2rem;
+    font-style: italic;
 }
 
 .join-form {
-    background: var(--bg-card);
+    background: rgba(232, 215, 184, 0.95);
     padding: 2rem;
-    border-radius: 12px;
+    border-radius: 8px;
     max-width: 400px;
     margin: 0 auto;
+    border: 3px solid var(--wood-brown);
+    box-shadow: 0 8px 16px rgba(45, 36, 22, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .form-group {
@@ -106,48 +144,51 @@ body {
 .form-group input {
     width: 100%;
     padding: 12px 16px;
-    background: var(--bg-darker);
-    border: 2px solid var(--bg-darker);
-    border-radius: 8px;
+    background: rgba(244, 232, 208, 0.6);
+    border: 2px solid var(--wood-brown);
+    border-radius: 6px;
     color: var(--text-primary);
     font-size: 1rem;
-    transition: border-color 0.2s;
+    transition: all 0.2s;
 }
 
 .form-group input:focus {
     outline: none;
     border-color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 3px rgba(214, 124, 74, 0.2);
 }
 
 .btn {
     padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
+    border: 2px solid var(--wood-brown);
+    border-radius: 6px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.2s;
+    box-shadow: 0 4px 0 rgba(45, 36, 22, 0.3);
 }
 
 .btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 0 rgba(45, 36, 22, 0.3);
 }
 
 .btn:active {
-    transform: translateY(0);
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 rgba(45, 36, 22, 0.3);
 }
 
 .btn-primary {
     width: 100%;
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-    color: white;
+    background: var(--accent-primary);
+    color: var(--parchment-light);
 }
 
 .btn-secondary {
-    background: var(--bg-darker);
-    color: var(--text-primary);
-    border: 2px solid var(--accent-primary);
+    background: var(--accent-secondary);
+    color: var(--parchment-light);
 }
 
 .error-message {
@@ -197,14 +238,17 @@ body {
 .player-slot {
     width: 150px;
     padding: 1.5rem 1rem;
-    background: var(--bg-card);
-    border-radius: 12px;
+    background: rgba(232, 215, 184, 0.9);
+    border: 3px solid var(--wood-brown);
+    border-radius: 8px;
     text-align: center;
+    box-shadow: 0 4px 8px rgba(45, 36, 22, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .player-slot.empty {
-    border: 2px dashed var(--text-muted);
-    background: transparent;
+    border: 2px dashed var(--wood-brown);
+    background: rgba(212, 196, 160, 0.3);
 }
 
 .player-slot .player-icon {
@@ -243,15 +287,18 @@ body {
     align-items: center;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 2px solid var(--bg-card);
+    border-bottom: 3px solid var(--wood-brown);
 }
 
 .phase-indicator {
     padding: 8px 16px;
     background: var(--accent-magic);
+    border: 2px solid var(--ink-medium);
     border-radius: 20px;
     font-weight: 600;
     font-size: 0.9rem;
+    color: var(--parchment-light);
+    box-shadow: 0 2px 4px rgba(45, 36, 22, 0.3);
 }
 
 .timer {
@@ -283,21 +330,27 @@ body {
 .player-card {
     width: 220px;
     padding: 1rem;
-    background: var(--bg-card);
-    border-radius: 12px;
+    background: rgba(232, 215, 184, 0.95);
+    border: 3px solid var(--wood-brown);
+    border-radius: 8px;
     position: relative;
     transition: transform 0.2s, box-shadow 0.2s;
     display: flex;
     flex-direction: column;
     align-items: center;
+    box-shadow: 0 4px 8px rgba(45, 36, 22, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .player-card.self {
-    border: 2px solid var(--accent-magic);
+    border: 3px solid var(--accent-primary);
+    box-shadow: 0 4px 12px rgba(214, 124, 74, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .player-card.dead {
     opacity: 0.5;
+    filter: grayscale(0.5);
 }
 
 .player-card.dead::after {
@@ -327,9 +380,10 @@ body {
 }
 
 .player-card .hp-bar {
-    height: 12px;
-    background: var(--bg-darker);
-    border-radius: 6px;
+    height: 14px;
+    background: rgba(139, 111, 71, 0.3);
+    border: 2px solid var(--wood-brown);
+    border-radius: 8px;
     overflow: hidden;
     margin-bottom: 0.5rem;
 }
@@ -351,24 +405,30 @@ body {
 .player-card .hp-text {
     font-size: 0.85rem;
     color: var(--text-secondary);
+    font-weight: 600;
 }
 
 .player-card .status-indicator {
     margin-top: 0.5rem;
     font-size: 0.8rem;
     color: var(--text-muted);
+    font-style: italic;
 }
 
 .player-card .status-indicator.ready {
     color: var(--success);
+    font-weight: 600;
 }
 
 /* Phase Content Areas */
 .phase-content {
-    background: var(--bg-card);
+    background: rgba(232, 215, 184, 0.95);
+    border: 3px solid var(--wood-brown);
     padding: 2rem;
-    border-radius: 12px;
+    border-radius: 8px;
     text-align: center;
+    box-shadow: 0 4px 8px rgba(45, 36, 22, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .phase-content h3 {
@@ -385,37 +445,43 @@ body {
 
 .spell-btn {
     padding: 1.5rem;
-    background: var(--bg-darker);
-    border: 2px solid transparent;
-    border-radius: 12px;
+    background: rgba(212, 196, 160, 0.8);
+    border: 3px solid var(--wood-brown);
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
     min-width: 180px;
+    box-shadow: 0 4px 0 rgba(45, 36, 22, 0.3);
 }
 
 .spell-btn:hover {
     border-color: var(--accent-magic);
     transform: translateY(-2px);
+    box-shadow: 0 6px 0 rgba(45, 36, 22, 0.3);
 }
 
 .spell-btn.selected {
     border-color: var(--accent-primary);
-    background: rgba(233, 69, 96, 0.2);
+    background: rgba(214, 124, 74, 0.3);
+    box-shadow: 0 2px 0 rgba(45, 36, 22, 0.3);
+    transform: translateY(2px);
 }
 
 .spell-btn .spell-type-badge {
     display: inline-block;
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
+    border: 1px solid rgba(45, 36, 22, 0.3);
     font-size: 0.7rem;
     font-weight: 600;
     text-transform: uppercase;
     margin-bottom: 0.5rem;
     background: var(--accent-magic);
+    color: var(--parchment-light);
 }
 
 .spell-btn.type-attack .spell-type-badge {
-    background: var(--accent-primary);
+    background: var(--wizard-red);
 }
 
 .spell-btn.type-attack-all .spell-type-badge {
@@ -423,11 +489,11 @@ body {
 }
 
 .spell-btn.type-heal .spell-type-badge {
-    background: var(--success);
+    background: var(--wizard-green);
 }
 
 .spell-btn.type-shield .spell-type-badge {
-    background: #3b82f6;
+    background: #7b9fc4;
 }
 
 .spell-btn .spell-name {
@@ -458,29 +524,34 @@ body {
 
 .target-btn {
     padding: 1.5rem 2rem;
-    background: var(--bg-darker);
-    border: 2px solid transparent;
-    border-radius: 12px;
+    background: rgba(212, 196, 160, 0.8);
+    border: 3px solid var(--wood-brown);
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
     color: var(--text-primary);
     font-size: 1.1rem;
     font-weight: 600;
+    box-shadow: 0 4px 0 rgba(45, 36, 22, 0.3);
 }
 
 .target-btn:hover:not(:disabled) {
     border-color: var(--accent-primary);
     transform: translateY(-2px);
+    box-shadow: 0 6px 0 rgba(45, 36, 22, 0.3);
 }
 
 .target-btn.selected {
     border-color: var(--accent-primary);
-    background: rgba(233, 69, 96, 0.2);
+    background: rgba(214, 124, 74, 0.3);
+    box-shadow: 0 2px 0 rgba(45, 36, 22, 0.3);
+    transform: translateY(2px);
 }
 
 .target-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+    filter: grayscale(0.5);
 }
 
 .target-btn .target-hp {
@@ -506,9 +577,11 @@ body {
     font-family: 'Courier New', monospace;
     letter-spacing: 1px;
     padding: 1rem;
-    background: var(--bg-darker);
+    background: rgba(139, 111, 71, 0.2);
+    border: 2px solid var(--wood-brown);
     border-radius: 8px;
     word-break: break-word;
+    color: var(--ink-dark);
 }
 
 .typing-area {
@@ -521,8 +594,8 @@ body {
     font-size: 1.3rem;
     font-family: 'Courier New', monospace;
     letter-spacing: 1px;
-    background: var(--bg-darker);
-    border: 2px solid var(--accent-magic);
+    background: rgba(244, 232, 208, 0.6);
+    border: 3px solid var(--wood-brown);
     border-radius: 8px;
     color: var(--text-primary);
     text-align: center;
@@ -531,6 +604,8 @@ body {
 .typing-input:focus {
     outline: none;
     border-color: var(--accent-primary);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 3px rgba(214, 124, 74, 0.2);
 }
 
 .typing-feedback {
@@ -562,14 +637,16 @@ body {
 .spell-effect {
     padding: 1rem;
     margin-bottom: 1rem;
-    background: var(--bg-darker);
+    background: rgba(212, 196, 160, 0.8);
+    border: 3px solid var(--wood-brown);
     border-radius: 8px;
-    border-left: 4px solid var(--accent-magic);
+    border-left: 6px solid var(--accent-magic);
+    box-shadow: 0 2px 4px rgba(45, 36, 22, 0.2);
 }
 
 .spell-effect.self-effect {
     border-left-color: var(--accent-primary);
-    background: rgba(233, 69, 96, 0.1);
+    background: rgba(214, 124, 74, 0.2);
 }
 
 .effect-header {
