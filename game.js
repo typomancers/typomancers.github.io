@@ -627,18 +627,63 @@ function renderTypingPhase() {
 }
 
 function updateTypingFeedback(expected, typed) {
-    let html = '';
+    // Split into words for per-word highlighting
+    const expectedWords = expected.split(/(\s+)/); // Preserve spaces
+    const typedWords = typed.split(/(\s+)/); // Preserve spaces
 
-    for (let i = 0; i < expected.length; i++) {
-        if (i < typed.length) {
-            if (typed[i] === expected[i]) {
-                html += `<span class="correct">${escapeHtml(expected[i])}</span>`;
-            } else {
-                html += `<span class="incorrect">${escapeHtml(expected[i])}</span>`;
+    let html = '';
+    let typedCharIndex = 0;
+    let expectedCharIndex = 0;
+
+    // Determine which word we're currently on by counting non-space words in typed text
+    const typedNonSpaceWords = typed.split(/\s+/).filter(w => w.length > 0);
+    const currentWordIndex = typedNonSpaceWords.length > 0 ? typedNonSpaceWords.length - 1 : 0;
+
+    let wordIndex = 0;
+    for (let i = 0; i < expectedWords.length; i++) {
+        const word = expectedWords[i];
+
+        // Handle spaces - just render them as-is
+        if (/^\s+$/.test(word)) {
+            html += word;
+            expectedCharIndex += word.length;
+            if (i < typedWords.length) {
+                typedCharIndex += (typedWords[i] || '').length;
+            }
+            continue;
+        }
+
+        // This is a non-space word
+        const isCurrentWord = wordIndex === currentWordIndex;
+        const isCompletedWord = wordIndex < currentWordIndex;
+        const typedWord = typedNonSpaceWords[wordIndex] || '';
+
+        if (isCompletedWord) {
+            // Grey out completed words
+            for (let j = 0; j < word.length; j++) {
+                html += `<span class="completed">${escapeHtml(word[j])}</span>`;
+            }
+        } else if (isCurrentWord) {
+            // Show current word with character-by-character red/green
+            for (let j = 0; j < word.length; j++) {
+                if (j < typedWord.length) {
+                    if (typedWord[j] === word[j]) {
+                        html += `<span class="correct">${escapeHtml(word[j])}</span>`;
+                    } else {
+                        html += `<span class="incorrect">${escapeHtml(word[j])}</span>`;
+                    }
+                } else {
+                    html += `<span class="pending">${escapeHtml(word[j])}</span>`;
+                }
             }
         } else {
-            html += `<span class="pending">${escapeHtml(expected[i])}</span>`;
+            // Grey out remaining words (not yet started)
+            for (let j = 0; j < word.length; j++) {
+                html += `<span class="pending">${escapeHtml(word[j])}</span>`;
+            }
         }
+
+        wordIndex++;
     }
 
     elements.typingFeedback.innerHTML = html;

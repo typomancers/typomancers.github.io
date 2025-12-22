@@ -689,6 +689,11 @@ body::before {
     color: var(--text-muted);
 }
 
+.typing-feedback .completed {
+    color: var(--text-muted);
+    opacity: 0.5;
+}
+
 /* Resolution Phase */
 .resolution-results {
     text-align: left;
