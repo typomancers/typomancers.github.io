@@ -341,7 +341,13 @@ function renderGame() {
     elements.turnNumber.textContent = game.turn_number;
     elements.phaseIndicator.textContent = formatPhase(game.phase);
 
-    renderPlayerCards();
+    // Hide player cards during resolution phase (they're shown in the animation)
+    if (game.phase === 'resolution') {
+        elements.playersStatus.classList.add('hidden');
+    } else {
+        elements.playersStatus.classList.remove('hidden');
+        renderPlayerCards();
+    }
 
     // Hide all phase content
     elements.spellSelection.classList.add('hidden');
