@@ -737,6 +737,11 @@ function renderResolution() {
         const casterIndex = getPlayerIndex(effect.caster_id);
         const casterSprite = getPlayerSprite(casterIndex, 'attack');
 
+        // Build stun indicator if caster was stunned
+        const stunIndicator = effect.stun_count && effect.stun_count > 0
+            ? `<span class="stun-indicator">⚡ Stunned ${effect.stun_count}x (-${effect.stun_count * 33}% effectiveness)</span>`
+            : '';
+
         html += `
             <div class="spell-effect ${isSelf ? 'self-effect' : ''}">
                 <div class="effect-header">
@@ -744,6 +749,7 @@ function renderResolution() {
                     <div class="effect-header-text">
                         <span class="caster">${escapeHtml(effect.caster_name)} cast ${escapeHtml(effect.spell_name)}!</span>
                         <span class="accuracy">${effect.accuracy_percent.toFixed(1)}% accuracy</span>
+                        ${stunIndicator}
                     </div>
                 </div>
                 <div class="effect-targets">

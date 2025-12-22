@@ -679,6 +679,14 @@ body::before {
     font-size: 0.9rem;
 }
 
+.effect-header .stun-indicator {
+    color: var(--error);
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: block;
+    margin-top: 0.25rem;
+}
+
 .effect-targets {
     margin: 0.5rem 0;
 }
