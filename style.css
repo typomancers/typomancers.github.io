@@ -669,11 +669,17 @@ body::before {
 }
 
 .typing-feedback {
-    margin-top: 0.5rem;
+    margin-bottom: 1rem;
     font-family: 'Courier New', monospace;
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     letter-spacing: 1px;
-    min-height: 2rem;
+    min-height: 3rem;
+    padding: 1rem;
+    background: rgba(139, 111, 71, 0.2);
+    border: 2px solid var(--wood-brown);
+    border-radius: 8px;
+    word-break: break-word;
+    line-height: 1.6;
 }
 
 .typing-feedback .correct {
