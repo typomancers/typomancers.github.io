@@ -487,6 +487,10 @@ function renderSpellSelection() {
         // Get the spell card image
         const spellImageSrc = getSpellImage(spell.name, spell.spell_type);
 
+        // Format difficulty for display
+        const difficultyLabel = spell.difficulty.charAt(0).toUpperCase() + spell.difficulty.slice(1);
+        const difficultyClass = `difficulty-${spell.difficulty}`;
+
         html += `
             <button class="spell-btn ${selected ? 'selected' : ''} ${typeClass}" data-spell-id="${spell.id}">
                 <div class="spell-type-badge">${typeLabel}</div>
@@ -497,8 +501,8 @@ function renderSpellSelection() {
                     <div class="spell-name">${escapeHtml(spell.name)}</div>
                     <div class="spell-stats">
                         <div class="spell-value">⚡ ${spell.max_value}</div>
+                        <div class="spell-difficulty ${difficultyClass}">${difficultyLabel}</div>
                     </div>
-                    <div class="spell-desc">${escapeHtml(spell.description)}</div>
                 </div>
             </button>
         `;
