@@ -1097,19 +1097,28 @@ setInterval(() => {
     if (layers.length === 0) return;
 
     let currentIndex = 0;
+    const transitionDuration = 300; // matches CSS transition time
 
     function cycleBackground() {
-        // Remove active from current
-        layers[currentIndex].classList.remove('active');
+        const outgoingIndex = currentIndex;
+        const incomingIndex = (currentIndex + 1) % layers.length;
 
-        // Move to next
-        currentIndex = (currentIndex + 1) % layers.length;
+        // Mark outgoing (keeps it visible during transition)
+        layers[outgoingIndex].classList.remove('active');
+        layers[outgoingIndex].classList.add('outgoing');
 
-        // Add active to new current
-        layers[currentIndex].classList.add('active');
+        // Mark incoming (fades in on top)
+        layers[incomingIndex].classList.add('active');
+
+        // After transition completes, clean up outgoing
+        setTimeout(() => {
+            layers[outgoingIndex].classList.remove('outgoing');
+        }, transitionDuration);
+
+        currentIndex = incomingIndex;
     }
 
-    // Cycle every 1 second
-    let backgroundCycleTime = 250;
+    // Cycle every 0.25 second
+    const backgroundCycleTime = 250;
     setInterval(cycleBackground, backgroundCycleTime);
 })();
