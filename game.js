@@ -462,7 +462,8 @@ function renderGame() {
     }
     const isDead = !self.is_alive;
 
-    if (isDead) {
+    // Dead players can spectate the resolution phase
+    if (isDead && game.phase !== 'resolution') {
         showWaiting('You have been defeated. Spectating...');
         return;
     }
