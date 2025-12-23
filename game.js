@@ -150,7 +150,6 @@ const elements = {
     targetSelection: document.getElementById('target-selection'),
     targetOptions: document.getElementById('target-options'),
     typingPhase: document.getElementById('typing-phase'),
-    incantationText: document.getElementById('incantation-text'),
     typingInput: document.getElementById('typing-input'),
     typingFeedback: document.getElementById('typing-feedback'),
     submitTypingBtn: document.getElementById('submit-typing-btn'),
@@ -694,8 +693,6 @@ function renderTypingPhase() {
 
     const typing = game.typing_phase;
     if (!typing) return;
-
-    elements.incantationText.textContent = typing.incantation;
 
     // Only reset input and start timer if this is the first render of typing phase
     const isFirstRender = !state.typingStartTime;
