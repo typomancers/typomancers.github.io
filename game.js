@@ -111,6 +111,7 @@ const state = {
     typingStartTime: null,
     typingSubmitted: false,
     timerInterval: null,
+    joiningRoom: false,
 };
 
 // ============================================
@@ -208,6 +209,13 @@ function connect(serverUrl) {
             };
 
             state.ws.onclose = () => {
+                // Reset join state so user can try again
+                state.joiningRoom = false;
+                const submitBtn = elements.joinForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Enter Arena';
+                }
                 showError('Connection lost. Please refresh the page.');
             };
 
@@ -339,6 +347,11 @@ function handleGameUpdate(msg) {
 elements.joinForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (state.joiningRoom) {
+        return;
+    }
+
     const playerName = elements.playerNameInput.value.trim();
     const serverUrl = elements.serverUrlInput.value.trim();
     const roomId = elements.roomIdInput.value.trim();
@@ -350,6 +363,13 @@ elements.joinForm.addEventListener('submit', async (e) => {
     }
 
     state.playerName = playerName;
+
+    // Disable the form while joining
+    const submitBtn = elements.joinForm.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.textContent;
+    state.joiningRoom = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Connecting...';
 
     try {
         hideError();
@@ -364,6 +384,10 @@ elements.joinForm.addEventListener('submit', async (e) => {
         });
     } catch (err) {
         showError(err.message);
+        // Re-enable form on error
+        state.joiningRoom = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
     }
 });
 
