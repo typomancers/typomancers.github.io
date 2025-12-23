@@ -1113,7 +1113,7 @@ function showGameOver() {
                         <span class="stat-value">${stats.max_wpm.toFixed(1)}</span>
                     </div>
                     <div class="stat-row">
-                        <span class="stat-label">Avg Efficiency:</span>
+                        <span class="stat-label">Avg Accuracy:</span>
                         <span class="stat-value">${(stats.avg_accuracy * 100).toFixed(1)}%</span>
                     </div>
                     <div class="stat-row">
