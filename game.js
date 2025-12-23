@@ -36,6 +36,7 @@ const imagePreloader = {
         'assets/yellow_attack.png',
         // Spell cards
         'assets/spell_cards/card_img_light_attack.png',
+        'assets/spell_cards/card_img_light_attack_2.png',
         'assets/spell_cards/card_img_heavy_attack.png',
         'assets/spell_cards/card_img_group_attack.png',
         'assets/spell_cards/card_img_healing.png',
@@ -1164,14 +1165,17 @@ function getSpellCardImage(spellType) {
 }
 
 /**
- * Map spell names to determine if they should use heavy attack image.
+ * Map spell names to their specific images.
  */
 function getSpellImage(spellName, spellType) {
     if (spellType === 'attack') {
-        // Use heavy attack for Heartwood Wrath, light attack for Foxfire Shard
         if (spellName === 'Heartwood Wrath') {
             return 'assets/spell_cards/card_img_heavy_attack.png';
         }
+        if (spellName === 'Faelight Dart') {
+            return 'assets/spell_cards/card_img_light_attack_2.png';
+        }
+        // Default for Foxfire Shard and other attacks
         return 'assets/spell_cards/card_img_light_attack.png';
     }
     return getSpellCardImage(spellType);
