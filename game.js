@@ -1101,6 +1101,15 @@ function renderGhostTypingPhase() {
     // Set up input handler
     elements.ghostTypingInput.oninput = () => {
         updateGhostTypingFeedback(incantation, elements.ghostTypingInput.value);
+
+        // Check if done typing (typed enough characters) - auto-submit
+        if (elements.ghostTypingInput.value.length >= incantation.length) {
+            setTimeout(() => {
+                if (!state.ghostTypingSubmitted) {
+                    submitGhostTyping();
+                }
+            }, 100);
+        }
     };
 
     // Handle submit button
