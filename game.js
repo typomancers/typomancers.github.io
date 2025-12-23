@@ -112,6 +112,11 @@ const state = {
     typingSubmitted: false,
     timerInterval: null,
     joiningRoom: false,
+    // Ghost state
+    isGhost: false,
+    selectedHauntType: null,
+    selectedHauntTarget: null,
+    ghostTypingSubmitted: false,
 };
 
 // ============================================
@@ -158,6 +163,17 @@ const elements = {
     resolutionResults: document.getElementById('resolution-results'),
     waitingOverlay: document.getElementById('waiting-overlay'),
     waitingMessage: document.getElementById('waiting-message'),
+
+    // Ghost phases
+    ghostHauntSelection: document.getElementById('ghost-haunt-selection'),
+    hauntTypeOptions: document.getElementById('haunt-type-options'),
+    ghostTargetSelection: document.getElementById('ghost-target-selection'),
+    ghostTargetOptions: document.getElementById('ghost-target-options'),
+    ghostTypingPhase: document.getElementById('ghost-typing-phase'),
+    hauntTargetName: document.getElementById('haunt-target-name'),
+    ghostTypingFeedback: document.getElementById('ghost-typing-feedback'),
+    ghostTypingInput: document.getElementById('ghost-typing-input'),
+    submitGhostTypingBtn: document.getElementById('submit-ghost-typing-btn'),
 
     // Game Over
     gameoverTitle: document.getElementById('gameover-title'),
@@ -313,6 +329,10 @@ function handleGameUpdate(msg) {
         state.selectedTarget = null;
         state.typingSubmitted = false;
         state.typingStartTime = null;
+        // Reset ghost state
+        state.selectedHauntType = null;
+        state.selectedHauntTarget = null;
+        state.ghostTypingSubmitted = false;
         stopTimer();
     }
 
@@ -478,17 +498,24 @@ function renderGame() {
     elements.resolutionPhase.classList.add('hidden');
     elements.waitingOverlay.classList.add('hidden');
     elements.timerDisplay.classList.add('hidden');
+    // Ghost phase content
+    elements.ghostHauntSelection.classList.add('hidden');
+    elements.ghostTargetSelection.classList.add('hidden');
+    elements.ghostTypingPhase.classList.add('hidden');
 
     // Get current player
     const self = game.players.find(p => p.id === state.playerId);
     if (!self) {
         return;
     }
-    const isDead = !self.is_alive;
+    const isGhost = self.is_ghost;
 
-    // Dead players can spectate the resolution phase
-    if (isDead && game.phase !== 'resolution') {
-        showWaiting('You have been defeated. Spectating...');
+    // Update ghost state
+    state.isGhost = isGhost;
+
+    // Ghost players get special UI instead of spectating
+    if (isGhost && game.phase !== 'resolution' && game.phase !== 'game_over') {
+        renderGhostPhase();
         return;
     }
 
@@ -524,8 +551,26 @@ function renderPlayerCards() {
 
         let statusText = '';
         let statusClass = '';
+        const isGhost = player.is_ghost;
 
-        if (!player.is_alive) {
+        if (isGhost) {
+            // Ghost player status
+            const gs = player.ghost_state;
+            if (gs) {
+                if (!gs.has_selected_haunt_type) {
+                    statusText = 'Choosing curse...';
+                } else if (!gs.has_selected_target) {
+                    statusText = 'Picking victim...';
+                } else if (!gs.has_finished_typing) {
+                    statusText = 'Haunting...';
+                } else {
+                    statusText = 'Curse ready!';
+                    statusClass = 'ready';
+                }
+            } else {
+                statusText = 'Ghost';
+            }
+        } else if (!player.is_alive) {
             statusText = 'Defeated';
         } else {
             switch (game.phase) {
@@ -545,7 +590,7 @@ function renderPlayerCards() {
         }
 
         html += `
-            <div class="player-card ${isSelf ? 'self' : ''} ${!player.is_alive ? 'dead' : ''}">
+            <div class="player-card ${isSelf ? 'self' : ''} ${!player.is_alive ? 'dead' : ''} ${isGhost ? 'ghost' : ''}">
                 <img src="${spriteUrl}" alt="${escapeHtml(player.name)}" class="player-card-sprite">
                 <div class="player-info">
                     <div class="player-name">${escapeHtml(player.name)}${isSelf ? ' (You)' : ''}</div>
@@ -906,6 +951,230 @@ function startResolutionTimer() {
 }
 
 // ============================================
+// Ghost Phase Rendering
+// ============================================
+
+function renderGhostPhase() {
+    const game = state.gameState;
+    const self = game.players.find(p => p.id === state.playerId);
+    if (!self || !self.ghost_state) return;
+
+    const gs = self.ghost_state;
+
+    // Determine which ghost phase to show based on state
+    if (!gs.has_selected_haunt_type) {
+        renderGhostHauntTypeSelection();
+    } else if (!gs.has_selected_target) {
+        renderGhostTargetSelection();
+    } else if (!gs.has_finished_typing && game.phase === 'typing') {
+        renderGhostTypingPhase();
+    } else {
+        // Ghost has finished all actions, wait for resolution
+        showWaiting('Your curse is prepared. Waiting for the living...');
+    }
+}
+
+function renderGhostHauntTypeSelection() {
+    const game = state.gameState;
+    if (!game.available_haunt_types) {
+        showWaiting('Preparing haunting options...');
+        return;
+    }
+
+    elements.ghostHauntSelection.classList.remove('hidden');
+
+    let html = '';
+    for (const hauntType of game.available_haunt_types) {
+        const selected = state.selectedHauntType === hauntType.haunt_type;
+        html += `
+            <div class="haunt-type-card ${selected ? 'selected' : ''}" data-haunt-type="${hauntType.haunt_type}">
+                <div class="haunt-type-name">${escapeHtml(hauntType.name)}</div>
+                <div class="haunt-type-description">${escapeHtml(hauntType.description)}</div>
+                <div class="haunt-type-penalty">${escapeHtml(hauntType.penalty_value)}</div>
+            </div>
+        `;
+    }
+
+    elements.hauntTypeOptions.innerHTML = html;
+
+    // Add click handlers
+    document.querySelectorAll('.haunt-type-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const hauntType = card.dataset.hauntType;
+            selectHauntType(hauntType);
+        });
+    });
+}
+
+function selectHauntType(hauntType) {
+    state.selectedHauntType = hauntType;
+    sendMessage({
+        type: 'select_haunt_type',
+        haunt_type: hauntType
+    });
+}
+
+function renderGhostTargetSelection() {
+    const game = state.gameState;
+
+    elements.ghostTargetSelection.classList.remove('hidden');
+
+    // Show only living players as potential targets
+    const livingPlayers = game.players.filter(p => p.is_alive && p.id !== state.playerId);
+
+    if (livingPlayers.length === 0) {
+        elements.ghostTargetOptions.innerHTML = '<p>No living players to haunt!</p>';
+        return;
+    }
+
+    let html = '';
+    for (const player of livingPlayers) {
+        const selected = state.selectedHauntTarget === player.id;
+        const hpPercent = Math.round((player.hp / player.max_hp) * 100);
+        html += `
+            <div class="ghost-target-btn ${selected ? 'selected' : ''}" data-target-id="${player.id}">
+                <div class="ghost-target-name">${escapeHtml(player.name)}</div>
+                <div class="ghost-target-hp">${player.hp} / ${player.max_hp} HP (${hpPercent}%)</div>
+            </div>
+        `;
+    }
+
+    elements.ghostTargetOptions.innerHTML = html;
+
+    // Add click handlers
+    document.querySelectorAll('.ghost-target-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.dataset.targetId;
+            selectHauntTarget(targetId);
+        });
+    });
+}
+
+function selectHauntTarget(targetId) {
+    state.selectedHauntTarget = targetId;
+    sendMessage({
+        type: 'select_haunt_target',
+        target_id: targetId
+    });
+}
+
+function renderGhostTypingPhase() {
+    const game = state.gameState;
+    const self = game.players.find(p => p.id === state.playerId);
+
+    // Show the incantation for typing
+    if (!game.typing_phase || !game.typing_phase.incantation) {
+        showWaiting('Waiting for incantation...');
+        return;
+    }
+
+    elements.ghostTypingPhase.classList.remove('hidden');
+    elements.timerDisplay.classList.remove('hidden');
+
+    // Find the target we're haunting
+    const targetId = self.ghost_state?.haunting_target_id;
+    const target = game.players.find(p => p.id === targetId);
+    elements.hauntTargetName.textContent = target ? target.name : 'Unknown';
+
+    const incantation = game.typing_phase.incantation;
+
+    // If we haven't set up the ghost typing phase yet
+    if (!state.ghostTypingSubmitted) {
+        // Enable input
+        elements.ghostTypingInput.disabled = false;
+        elements.ghostTypingInput.value = '';
+        elements.ghostTypingInput.focus();
+
+        // Set start time if not set
+        if (!state.typingStartTime) {
+            state.typingStartTime = Date.now();
+        }
+
+        // Start timer
+        startGhostTypingTimer(game.typing_phase.duration_ms, game.phase_time_remaining_ms);
+
+        // Set up input handler
+        elements.ghostTypingInput.oninput = () => {
+            updateGhostTypingFeedback(incantation, elements.ghostTypingInput.value);
+        };
+
+        // Handle submit button
+        elements.submitGhostTypingBtn.onclick = () => submitGhostTyping();
+
+        // Handle Enter key
+        elements.ghostTypingInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitGhostTyping();
+            }
+        };
+    }
+
+    // Update feedback display
+    updateGhostTypingFeedback(incantation, elements.ghostTypingInput.value);
+}
+
+function updateGhostTypingFeedback(incantation, typed) {
+    let html = '';
+    for (let i = 0; i < incantation.length; i++) {
+        const char = incantation[i];
+        let className = '';
+        if (i < typed.length) {
+            className = typed[i] === char ? 'correct' : 'incorrect';
+        }
+        html += `<span class="${className}">${escapeHtml(char)}</span>`;
+    }
+    elements.ghostTypingFeedback.innerHTML = html;
+}
+
+function startGhostTypingTimer(duration, remaining) {
+    stopTimer();
+
+    const initialRemaining = remaining !== undefined ? remaining : duration;
+    const startTime = Date.now();
+
+    state.timerInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const remainingMs = Math.max(0, initialRemaining - elapsed);
+        const seconds = Math.ceil(remainingMs / 1000);
+
+        elements.timerDisplay.textContent = `${seconds}s`;
+        if (seconds <= 5) {
+            elements.timerDisplay.classList.add('warning');
+        } else {
+            elements.timerDisplay.classList.remove('warning');
+        }
+
+        if (remainingMs <= 0) {
+            stopTimer();
+            // Auto-submit if not submitted yet
+            if (!state.ghostTypingSubmitted) {
+                submitGhostTyping();
+            }
+        }
+    }, 100);
+}
+
+function submitGhostTyping() {
+    if (state.ghostTypingSubmitted) return;
+
+    state.ghostTypingSubmitted = true;
+    elements.ghostTypingInput.disabled = true;
+    stopTimer();
+
+    const typedText = elements.ghostTypingInput.value;
+    const completionTime = state.typingStartTime ? Date.now() - state.typingStartTime : null;
+
+    sendMessage({
+        type: 'submit_ghost_typing',
+        typed_text: typedText,
+        completion_time_ms: completionTime
+    });
+
+    showWaiting('Curse sent! Waiting for the living to finish...');
+}
+
+// ============================================
 // Resolution Phase
 // ============================================
 
@@ -1070,6 +1339,47 @@ function renderResolution() {
         `;
 
         elements.resolutionResults.appendChild(penaltyCard);
+    }
+
+    // Add ghost haunt results if present
+    if (resolution.ghost_haunts && resolution.ghost_haunts.length > 0) {
+        const ghostHauntsDiv = document.createElement('div');
+        ghostHauntsDiv.className = 'ghost-haunt-results';
+
+        let ghostHtml = '<h4 class="ghost-haunt-title">Ghost Haunts</h4>';
+
+        for (const haunt of resolution.ghost_haunts) {
+            const outcomeClass = haunt.was_successful ? 'success' : 'failure';
+            const outcomeText = haunt.was_successful ? 'Curse Applied!' : 'Resisted!';
+            const hauntTypeName = haunt.haunt_type === 'accuracy_penalty' ? 'Curse of Imprecision' : 'Chains of Lethargy';
+
+            ghostHtml += `
+                <div class="haunt-result-card ${outcomeClass}">
+                    <div class="haunt-result-header">
+                        <div class="haunt-result-players">
+                            <span class="ghost-name">${escapeHtml(haunt.ghost_name)}</span>
+                            <span> haunted </span>
+                            <span class="target-name">${escapeHtml(haunt.target_name)}</span>
+                        </div>
+                        <div class="haunt-result-outcome ${outcomeClass}">${outcomeText}</div>
+                    </div>
+                    <div class="haunt-result-stats">
+                        <div class="haunt-result-stat">
+                            <div class="label">Ghost</div>
+                            <div>${(haunt.ghost_accuracy * 100).toFixed(1)}% / ${haunt.ghost_time_ms ? (haunt.ghost_time_ms / 1000).toFixed(1) + 's' : 'DNF'}</div>
+                        </div>
+                        <div class="haunt-result-stat">
+                            <div class="label">Target</div>
+                            <div>${(haunt.target_accuracy * 100).toFixed(1)}% / ${haunt.target_time_ms ? (haunt.target_time_ms / 1000).toFixed(1) + 's' : 'DNF'}</div>
+                        </div>
+                    </div>
+                    ${haunt.was_successful ? `<div class="haunt-penalty-applied">${hauntTypeName}: -${(haunt.penalty_applied * 100).toFixed(0)}% spell effectiveness</div>` : ''}
+                </div>
+            `;
+        }
+
+        ghostHauntsDiv.innerHTML = ghostHtml;
+        elements.resolutionResults.appendChild(ghostHauntsDiv);
     }
 }
 

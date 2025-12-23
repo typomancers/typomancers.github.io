@@ -1146,6 +1146,262 @@ body::before {
 }
 
 /* ============================================
+   Ghost Play Styles
+   ============================================ */
+
+.ghost-header {
+    color: #7b68ee;
+    text-shadow: 0 0 10px rgba(123, 104, 238, 0.5);
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.ghost-subtitle {
+    color: #9b8ec4;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Ghost player card styling */
+.player-card.ghost {
+    opacity: 0.75;
+    background: linear-gradient(135deg,
+        rgba(123, 104, 238, 0.15) 0%,
+        rgba(186, 162, 238, 0.1) 50%,
+        rgba(123, 104, 238, 0.15) 100%);
+    border-color: #7b68ee;
+    box-shadow: 0 0 15px rgba(123, 104, 238, 0.3);
+}
+
+.player-card.ghost .player-name {
+    color: #7b68ee;
+}
+
+.player-card.ghost .hp-bar {
+    background: linear-gradient(90deg, #7b68ee, #9b8ec4);
+    opacity: 0.5;
+}
+
+/* Haunt type selection */
+.haunt-type-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.haunt-type-card {
+    background: linear-gradient(135deg,
+        rgba(123, 104, 238, 0.2) 0%,
+        rgba(186, 162, 238, 0.15) 100%);
+    border: 3px solid #7b68ee;
+    border-radius: 15px;
+    padding: 1.5rem;
+    min-width: 200px;
+    max-width: 280px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.haunt-type-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(123, 104, 238, 0.4);
+    border-color: #9b8ec4;
+}
+
+.haunt-type-card.selected {
+    background: linear-gradient(135deg,
+        rgba(123, 104, 238, 0.4) 0%,
+        rgba(186, 162, 238, 0.3) 100%);
+    box-shadow: 0 0 20px rgba(123, 104, 238, 0.5);
+}
+
+.haunt-type-name {
+    font-size: 1.3rem;
+    color: #7b68ee;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.haunt-type-description {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.haunt-type-penalty {
+    font-size: 1.1rem;
+    color: #c85a54;
+    font-weight: bold;
+}
+
+/* Ghost target selection */
+.ghost-target-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.ghost-target-btn {
+    background: linear-gradient(135deg,
+        rgba(123, 104, 238, 0.15) 0%,
+        rgba(186, 162, 238, 0.1) 100%);
+    border: 2px solid #7b68ee;
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.ghost-target-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(123, 104, 238, 0.3);
+    border-color: #9b8ec4;
+}
+
+.ghost-target-btn.selected {
+    background: linear-gradient(135deg,
+        rgba(123, 104, 238, 0.35) 0%,
+        rgba(186, 162, 238, 0.25) 100%);
+    box-shadow: 0 0 15px rgba(123, 104, 238, 0.4);
+}
+
+.ghost-target-name {
+    font-size: 1.1rem;
+    color: #7b68ee;
+    font-weight: bold;
+}
+
+.ghost-target-hp {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Ghost typing input */
+.typing-input.ghost-input {
+    border-color: #7b68ee;
+    background: rgba(123, 104, 238, 0.05);
+}
+
+.typing-input.ghost-input:focus {
+    border-color: #9b8ec4;
+    box-shadow: 0 0 15px rgba(123, 104, 238, 0.3);
+}
+
+.btn.ghost-btn {
+    background: linear-gradient(135deg, #7b68ee 0%, #9b8ec4 100%);
+    border-color: #6a5acd;
+}
+
+.btn.ghost-btn:hover {
+    background: linear-gradient(135deg, #8b7eee 0%, #ab9ed4 100%);
+    transform: translateY(-2px);
+}
+
+/* Ghost haunt results in resolution */
+.ghost-haunt-results {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px dashed #7b68ee;
+}
+
+.ghost-haunt-title {
+    color: #7b68ee;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.haunt-result-card {
+    background: linear-gradient(135deg,
+        rgba(123, 104, 238, 0.1) 0%,
+        rgba(186, 162, 238, 0.05) 100%);
+    border: 2px solid #7b68ee;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.haunt-result-card.success {
+    border-color: #6b8e4e;
+    background: linear-gradient(135deg,
+        rgba(107, 142, 78, 0.1) 0%,
+        rgba(123, 104, 238, 0.05) 100%);
+}
+
+.haunt-result-card.failure {
+    border-color: #c85a54;
+    background: linear-gradient(135deg,
+        rgba(200, 90, 84, 0.1) 0%,
+        rgba(123, 104, 238, 0.05) 100%);
+}
+
+.haunt-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.haunt-result-players {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.haunt-result-players .ghost-name {
+    color: #7b68ee;
+    font-weight: bold;
+}
+
+.haunt-result-players .target-name {
+    color: var(--text-secondary);
+}
+
+.haunt-result-outcome {
+    font-weight: bold;
+    padding: 0.25rem 0.75rem;
+    border-radius: 5px;
+}
+
+.haunt-result-outcome.success {
+    color: #6b8e4e;
+    background: rgba(107, 142, 78, 0.2);
+}
+
+.haunt-result-outcome.failure {
+    color: #c85a54;
+    background: rgba(200, 90, 84, 0.2);
+}
+
+.haunt-result-stats {
+    display: flex;
+    justify-content: space-around;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.haunt-result-stat {
+    text-align: center;
+}
+
+.haunt-result-stat .label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.haunt-penalty-applied {
+    margin-top: 0.5rem;
+    text-align: center;
+    color: #c85a54;
+    font-weight: bold;
+}
+
+/* ============================================
    Responsive
    ============================================ */
 
