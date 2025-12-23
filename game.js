@@ -1355,7 +1355,19 @@ function renderResolution() {
         for (const haunt of resolution.ghost_haunts) {
             const outcomeClass = haunt.was_successful ? 'success' : 'failure';
             const outcomeText = haunt.was_successful ? 'Curse Applied!' : 'Resisted!';
-            const hauntTypeName = haunt.haunt_type === 'accuracy_penalty' ? 'Curse of Imprecision' : 'Chains of Lethargy';
+            const isAccuracyPenalty = haunt.haunt_type === 'accuracy_penalty';
+            const hauntTypeName = isAccuracyPenalty ? 'Curse of Imprecision' : 'Chains of Lethargy';
+
+            // Format the penalty text based on haunt type
+            let penaltyText = '';
+            if (haunt.was_successful) {
+                if (isAccuracyPenalty) {
+                    penaltyText = `${hauntTypeName}: -${(haunt.penalty_applied * 100).toFixed(0)}% spell effectiveness`;
+                } else {
+                    // Speed penalty - penalty_applied is stored as seconds
+                    penaltyText = `${hauntTypeName}: +${haunt.penalty_applied.toFixed(0)}s cast delay`;
+                }
+            }
 
             ghostHtml += `
                 <div class="haunt-result-card ${outcomeClass}">
@@ -1377,7 +1389,7 @@ function renderResolution() {
                             <div>${(haunt.target_accuracy * 100).toFixed(1)}% / ${haunt.target_time_ms ? (haunt.target_time_ms / 1000).toFixed(1) + 's' : 'DNF'}</div>
                         </div>
                     </div>
-                    ${haunt.was_successful ? `<div class="haunt-penalty-applied">${hauntTypeName}: -${(haunt.penalty_applied * 100).toFixed(0)}% spell effectiveness</div>` : ''}
+                    ${penaltyText ? `<div class="haunt-penalty-applied">${penaltyText}</div>` : ''}
                 </div>
             `;
         }
