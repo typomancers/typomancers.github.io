@@ -1220,6 +1220,59 @@ function renderResolution() {
     // Clear the container
     elements.resolutionResults.innerHTML = '';
 
+    // Add ghost haunt results FIRST if present (so players understand penalties before seeing spells)
+    if (resolution.ghost_haunts && resolution.ghost_haunts.length > 0) {
+        const ghostHauntsDiv = document.createElement('div');
+        ghostHauntsDiv.className = 'ghost-haunt-results';
+
+        let ghostHtml = '<h4 class="ghost-haunt-title">Ghost Haunts</h4>';
+
+        for (const haunt of resolution.ghost_haunts) {
+            const outcomeClass = haunt.was_successful ? 'success' : 'failure';
+            const outcomeText = haunt.was_successful ? 'Curse Applied!' : 'Resisted!';
+            const isAccuracyPenalty = haunt.haunt_type === 'accuracy_penalty';
+            const hauntTypeName = isAccuracyPenalty ? 'Curse of Imprecision' : 'Chains of Lethargy';
+
+            // Format the penalty text based on haunt type
+            let penaltyText = '';
+            if (haunt.was_successful) {
+                if (isAccuracyPenalty) {
+                    penaltyText = `${hauntTypeName}: -${(haunt.penalty_applied * 100).toFixed(0)}% spell effectiveness`;
+                } else {
+                    // Speed penalty - penalty_applied is stored as seconds
+                    penaltyText = `${hauntTypeName}: +${haunt.penalty_applied.toFixed(0)}s cast delay`;
+                }
+            }
+
+            ghostHtml += `
+                <div class="haunt-result-card ${outcomeClass}">
+                    <div class="haunt-result-header">
+                        <div class="haunt-result-players">
+                            <span class="ghost-name">${escapeHtml(haunt.ghost_name)}</span>
+                            <span> haunted </span>
+                            <span class="target-name">${escapeHtml(haunt.target_name)}</span>
+                        </div>
+                        <div class="haunt-result-outcome ${outcomeClass}">${outcomeText}</div>
+                    </div>
+                    <div class="haunt-result-stats">
+                        <div class="haunt-result-stat">
+                            <div class="label">Ghost</div>
+                            <div>${(haunt.ghost_accuracy * 100).toFixed(1)}% / ${haunt.ghost_time_ms ? (haunt.ghost_time_ms / 1000).toFixed(1) + 's' : 'DNF'}</div>
+                        </div>
+                        <div class="haunt-result-stat">
+                            <div class="label">Target</div>
+                            <div>${(haunt.target_accuracy * 100).toFixed(1)}% / ${haunt.target_time_ms ? (haunt.target_time_ms / 1000).toFixed(1) + 's' : 'DNF'}</div>
+                        </div>
+                    </div>
+                    ${penaltyText ? `<div class="haunt-penalty-applied">${penaltyText}</div>` : ''}
+                </div>
+            `;
+        }
+
+        ghostHauntsDiv.innerHTML = ghostHtml;
+        elements.resolutionResults.appendChild(ghostHauntsDiv);
+    }
+
     // Create all effect cards and animate them sequentially
     resolution.effects.forEach((effect, index) => {
         const isSelf = effect.caster_id === state.playerId;
@@ -1352,59 +1405,6 @@ function renderResolution() {
         `;
 
         elements.resolutionResults.appendChild(penaltyCard);
-    }
-
-    // Add ghost haunt results if present
-    if (resolution.ghost_haunts && resolution.ghost_haunts.length > 0) {
-        const ghostHauntsDiv = document.createElement('div');
-        ghostHauntsDiv.className = 'ghost-haunt-results';
-
-        let ghostHtml = '<h4 class="ghost-haunt-title">Ghost Haunts</h4>';
-
-        for (const haunt of resolution.ghost_haunts) {
-            const outcomeClass = haunt.was_successful ? 'success' : 'failure';
-            const outcomeText = haunt.was_successful ? 'Curse Applied!' : 'Resisted!';
-            const isAccuracyPenalty = haunt.haunt_type === 'accuracy_penalty';
-            const hauntTypeName = isAccuracyPenalty ? 'Curse of Imprecision' : 'Chains of Lethargy';
-
-            // Format the penalty text based on haunt type
-            let penaltyText = '';
-            if (haunt.was_successful) {
-                if (isAccuracyPenalty) {
-                    penaltyText = `${hauntTypeName}: -${(haunt.penalty_applied * 100).toFixed(0)}% spell effectiveness`;
-                } else {
-                    // Speed penalty - penalty_applied is stored as seconds
-                    penaltyText = `${hauntTypeName}: +${haunt.penalty_applied.toFixed(0)}s cast delay`;
-                }
-            }
-
-            ghostHtml += `
-                <div class="haunt-result-card ${outcomeClass}">
-                    <div class="haunt-result-header">
-                        <div class="haunt-result-players">
-                            <span class="ghost-name">${escapeHtml(haunt.ghost_name)}</span>
-                            <span> haunted </span>
-                            <span class="target-name">${escapeHtml(haunt.target_name)}</span>
-                        </div>
-                        <div class="haunt-result-outcome ${outcomeClass}">${outcomeText}</div>
-                    </div>
-                    <div class="haunt-result-stats">
-                        <div class="haunt-result-stat">
-                            <div class="label">Ghost</div>
-                            <div>${(haunt.ghost_accuracy * 100).toFixed(1)}% / ${haunt.ghost_time_ms ? (haunt.ghost_time_ms / 1000).toFixed(1) + 's' : 'DNF'}</div>
-                        </div>
-                        <div class="haunt-result-stat">
-                            <div class="label">Target</div>
-                            <div>${(haunt.target_accuracy * 100).toFixed(1)}% / ${haunt.target_time_ms ? (haunt.target_time_ms / 1000).toFixed(1) + 's' : 'DNF'}</div>
-                        </div>
-                    </div>
-                    ${penaltyText ? `<div class="haunt-penalty-applied">${penaltyText}</div>` : ''}
-                </div>
-            `;
-        }
-
-        ghostHauntsDiv.innerHTML = ghostHtml;
-        elements.resolutionResults.appendChild(ghostHauntsDiv);
     }
 }
 
