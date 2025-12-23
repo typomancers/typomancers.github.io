@@ -1008,7 +1008,7 @@ function renderGhostHauntTypeSelection() {
 
 function selectHauntType(hauntType) {
     state.selectedHauntType = hauntType;
-    sendMessage({
+    send({
         type: 'select_haunt_type',
         haunt_type: hauntType
     });
@@ -1052,7 +1052,7 @@ function renderGhostTargetSelection() {
 
 function selectHauntTarget(targetId) {
     state.selectedHauntTarget = targetId;
-    sendMessage({
+    send({
         type: 'select_haunt_target',
         target_id: targetId
     });
@@ -1165,7 +1165,7 @@ function submitGhostTyping() {
     const typedText = elements.ghostTypingInput.value;
     const completionTime = state.typingStartTime ? Date.now() - state.typingStartTime : null;
 
-    sendMessage({
+    send({
         type: 'submit_ghost_typing',
         typed_text: typedText,
         completion_time_ms: completionTime
