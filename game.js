@@ -116,6 +116,7 @@ const state = {
     isGhost: false,
     selectedHauntType: null,
     selectedHauntTarget: null,
+    ghostTypingStartTime: null,
     ghostTypingSubmitted: false,
 };
 
@@ -332,6 +333,7 @@ function handleGameUpdate(msg) {
         // Reset ghost state
         state.selectedHauntType = null;
         state.selectedHauntTarget = null;
+        state.ghostTypingStartTime = null;
         state.ghostTypingSubmitted = false;
         stopTimer();
     }
@@ -1062,6 +1064,12 @@ function renderGhostTypingPhase() {
     const game = state.gameState;
     const self = game.players.find(p => p.id === state.playerId);
 
+    // If already submitted, show waiting
+    if (state.ghostTypingSubmitted) {
+        showWaiting('Waiting for other players to finish...');
+        return;
+    }
+
     // Show the incantation for typing
     if (!game.typing_phase || !game.typing_phase.incantation) {
         showWaiting('Waiting for incantation...');
@@ -1078,39 +1086,35 @@ function renderGhostTypingPhase() {
 
     const incantation = game.typing_phase.incantation;
 
-    // If we haven't set up the ghost typing phase yet
-    if (!state.ghostTypingSubmitted) {
-        // Enable input
-        elements.ghostTypingInput.disabled = false;
+    // Only reset input and start timer if this is the first render of ghost typing phase
+    const isFirstRender = !state.ghostTypingStartTime;
+    if (isFirstRender) {
         elements.ghostTypingInput.value = '';
-        elements.ghostTypingInput.focus();
-
-        // Set start time if not set
-        if (!state.typingStartTime) {
-            state.typingStartTime = Date.now();
-        }
-
-        // Start timer
+        state.ghostTypingStartTime = Date.now();
         startGhostTypingTimer(game.typing_phase.duration_ms, game.phase_time_remaining_ms);
-
-        // Set up input handler
-        elements.ghostTypingInput.oninput = () => {
-            updateGhostTypingFeedback(incantation, elements.ghostTypingInput.value);
-        };
-
-        // Handle submit button
-        elements.submitGhostTypingBtn.onclick = () => submitGhostTyping();
-
-        // Handle Enter key
-        elements.ghostTypingInput.onkeydown = (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                submitGhostTyping();
-            }
-        };
     }
 
-    // Update feedback display
+    // Enable input and focus
+    elements.ghostTypingInput.disabled = false;
+    elements.ghostTypingInput.focus();
+
+    // Set up input handler
+    elements.ghostTypingInput.oninput = () => {
+        updateGhostTypingFeedback(incantation, elements.ghostTypingInput.value);
+    };
+
+    // Handle submit button
+    elements.submitGhostTypingBtn.onclick = () => submitGhostTyping();
+
+    // Handle Enter key
+    elements.ghostTypingInput.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            submitGhostTyping();
+        }
+    };
+
+    // Update feedback display (preserves progress on re-render)
     updateGhostTypingFeedback(incantation, elements.ghostTypingInput.value);
 }
 
