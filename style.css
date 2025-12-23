@@ -820,6 +820,31 @@ body::before {
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
+/* Accuracy penalty card */
+.resolution-card.penalty-card {
+    border-color: var(--error);
+    background: rgba(200, 90, 84, 0.15);
+    box-shadow: 0 4px 12px rgba(200, 90, 84, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.penalty-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 140px;
+}
+
+.penalty-icon {
+    font-size: 3rem;
+    line-height: 1;
+}
+
+.penalty-title {
+    color: var(--error) !important;
+}
+
 /* Horizontal row layout: caster -> spell -> targets */
 .resolution-row {
     display: flex;

@@ -1020,6 +1020,57 @@ function renderResolution() {
         effectCard.innerHTML = cardHTML;
         elements.resolutionResults.appendChild(effectCard);
     });
+
+    // Add accuracy penalty card if present
+    if (resolution.accuracy_penalty) {
+        const penalty = resolution.accuracy_penalty;
+        const penaltyPlayerIndex = getPlayerIndex(penalty.player_id);
+        const penaltySprite = getPlayerSprite(penaltyPlayerIndex, 'idle');
+        const isSelf = penalty.player_id === state.playerId;
+
+        // Calculate delay to appear after all spell effects
+        const penaltyDelay = resolution.effects.length * effectDuration;
+
+        const penaltyCard = document.createElement('div');
+        penaltyCard.className = `resolution-card penalty-card ${isSelf ? 'self-effect' : ''}`;
+
+        let penaltyEffectText = `-${penalty.damage} HP`;
+        let penaltyEffectClass = 'damage';
+        if (penalty.was_killed) {
+            penaltyEffectText = 'DEFEATED!';
+            penaltyEffectClass += ' kill';
+        }
+
+        penaltyCard.innerHTML = `
+            <div class="resolution-row fade-element" style="animation-delay: ${penaltyDelay}ms">
+                <div class="resolution-caster">
+                    <img src="${penaltySprite}" alt="${escapeHtml(penalty.player_name)}" class="caster-image">
+                    <div class="caster-name">${escapeHtml(penalty.player_name)}</div>
+                </div>
+
+                <div class="resolution-spell penalty-indicator">
+                    <div class="penalty-icon">📉</div>
+                    <div class="spell-info">
+                        <div class="spell-name penalty-title">Lowest Accuracy Penalty</div>
+                        <div class="spell-accuracy">${penalty.accuracy_percent.toFixed(1)}% accuracy</div>
+                    </div>
+                </div>
+
+                <div class="resolution-targets">
+                    <div class="target-item">
+                        <img src="${penaltySprite}" alt="${escapeHtml(penalty.player_name)}" class="target-image">
+                        <div class="target-info">
+                            <div class="target-name">${escapeHtml(penalty.player_name)}</div>
+                            <div class="target-effect ${penaltyEffectClass}">${penaltyEffectText}</div>
+                            <div class="target-hp">${penalty.hp_after} HP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        elements.resolutionResults.appendChild(penaltyCard);
+    }
 }
 
 // ============================================
@@ -1060,6 +1111,10 @@ function showGameOver() {
                     <div class="stat-row">
                         <span class="stat-label">Max WPM:</span>
                         <span class="stat-value">${stats.max_wpm.toFixed(1)}</span>
+                    </div>
+                    <div class="stat-row">
+                        <span class="stat-label">Avg Efficiency:</span>
+                        <span class="stat-value">${(stats.avg_accuracy * 100).toFixed(1)}%</span>
                     </div>
                     <div class="stat-row">
                         <span class="stat-label">Damage Dealt:</span>
