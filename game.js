@@ -545,7 +545,8 @@ function renderPlayerCards() {
     for (const player of game.players) {
         const isSelf = player.id === state.playerId;
         const playerIndex = getPlayerIndex(player.id);
-        const spriteUrl = getPlayerSprite(playerIndex, 'idle');
+        const isDead = !player.is_alive;
+        const spriteUrl = getPlayerSprite(playerIndex, 'idle', isDead);
         const hpPercent = Math.max(0, (player.hp / player.max_hp) * 100);
         let hpClass = '';
         if (hpPercent <= 25) hpClass = 'low';
@@ -1430,7 +1431,8 @@ function showGameOver() {
 
         for (const stats of game.player_stats) {
             const playerIndex = getPlayerIndex(stats.player_id);
-            const spriteUrl = getPlayerSprite(playerIndex, 'idle');
+            const isWinner = stats.player_id === game.winner;
+            const spriteUrl = getPlayerSprite(playerIndex, 'idle', !isWinner);
             const isSelf = stats.player_id === state.playerId;
 
             statsHtml += `
@@ -1535,8 +1537,12 @@ function getPlayerSpriteColor(playerIndex) {
  * Get the sprite path for a player.
  * @param {number} playerIndex - Player index (0-5)
  * @param {string} type - 'idle' or 'attack'
+ * @param {boolean} isDead - Whether the player is dead (uses ghost sprite)
  */
-function getPlayerSprite(playerIndex, type = 'idle') {
+function getPlayerSprite(playerIndex, type = 'idle', isDead = false) {
+    if (isDead) {
+        return 'assets/ghost_player.png';
+    }
     const color = getPlayerSpriteColor(playerIndex);
     return `assets/${color}_${type}.png`;
 }

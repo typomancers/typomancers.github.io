@@ -408,17 +408,7 @@ body::before {
 }
 
 .player-card.dead {
-    opacity: 0.5;
-    filter: grayscale(0.5);
-}
-
-.player-card.dead::after {
-    content: '💀';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 3rem;
+    opacity: 0.7;
 }
 
 .player-card-sprite {
