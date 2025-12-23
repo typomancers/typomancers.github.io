@@ -1167,7 +1167,7 @@ function submitGhostTyping() {
     stopTimer();
 
     const typedText = elements.ghostTypingInput.value;
-    const completionTime = state.typingStartTime ? Date.now() - state.typingStartTime : null;
+    const completionTime = state.ghostTypingStartTime ? Date.now() - state.ghostTypingStartTime : null;
 
     send({
         type: 'submit_ghost_typing',
