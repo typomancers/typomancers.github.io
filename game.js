@@ -807,7 +807,7 @@ function renderTypingPhase() {
     };
 }
 
-function updateTypingFeedback(expected, typed) {
+function generateTypingFeedbackHtml(expected, typed) {
     // Split into words for per-word highlighting
     const expectedWords = expected.split(/(\s+)/); // Preserve spaces
     const typedWords = typed.split(/(\s+)/); // Preserve spaces
@@ -867,6 +867,11 @@ function updateTypingFeedback(expected, typed) {
         wordIndex++;
     }
 
+    return html;
+}
+
+function updateTypingFeedback(expected, typed) {
+    const html = generateTypingFeedbackHtml(expected, typed);
     elements.typingFeedback.innerHTML = html;
 }
 
@@ -1129,15 +1134,8 @@ function renderGhostTypingPhase() {
 }
 
 function updateGhostTypingFeedback(incantation, typed) {
-    let html = '';
-    for (let i = 0; i < incantation.length; i++) {
-        const char = incantation[i];
-        let className = '';
-        if (i < typed.length) {
-            className = typed[i] === char ? 'correct' : 'incorrect';
-        }
-        html += `<span class="${className}">${escapeHtml(char)}</span>`;
-    }
+    // Use the same word-by-word highlighting logic as living players
+    const html = generateTypingFeedbackHtml(incantation, typed);
     elements.ghostTypingFeedback.innerHTML = html;
 }
 
